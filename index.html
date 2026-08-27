@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Yunjin (Vivian) Yu · music, code &amp; sound</title>
+<meta name="description" content="Yunjin (Vivian) Yu. ICAM-Music at UC San Diego, Electrical Engineering minor. Sonic arts researcher, audio-plugin developer, singer-songwriter." />
+<meta name="author" content="Yunjin (Vivian) Yu" />
+<meta name="theme-color" content="#dceaf7" />
+
+<script>
+/* set the sky before first paint so night mode never flashes white */
+(function(){try{var m=localStorage.getItem('vy-sky');
+if(!m)m=window.matchMedia('(prefers-color-scheme: dark)').matches?'night':'day';
+document.documentElement.setAttribute('data-sky',m);}catch(e){}}());
+</script>
+
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Yunjin (Vivian) Yu · music, code &amp; sound" />
+<meta property="og:description" content="ICAM-Music @ UCSD · EE minor · sonic arts research · audio plugins · singer-songwriter." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Nunito:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%98%81%EF%B8%8F%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+
+<a class="skip-link" href="#about">skip to content</a>
+
+<!-- ─────────────  fixed sky layer  ───────────── -->
+<div class="sky" aria-hidden="true">
+  <div class="sky__wash"></div>
+  <div class="stars" id="stars"></div>
+  <div class="clouds" id="clouds">
+    <svg class="cloud cloud--1" data-depth="0.06" viewBox="0 0 300 120"><use href="#cloudShape"/></svg>
+    <svg class="cloud cloud--2" data-depth="0.13" viewBox="0 0 300 120"><use href="#cloudShape"/></svg>
+    <svg class="cloud cloud--3" data-depth="0.09" viewBox="0 0 300 120"><use href="#cloudShape"/></svg>
+    <svg class="cloud cloud--4" data-depth="0.19" viewBox="0 0 300 120"><use href="#cloudShape"/></svg>
+    <svg class="cloud cloud--5" data-depth="0.04" viewBox="0 0 300 120"><use href="#cloudShape"/></svg>
+  </div>
+  <div class="moon"></div>
+</div>
+
+<!-- shared svg defs -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <path id="cloudShape" d="M60 100c-24 0-44-16-44-36 0-18 15-33 35-35 6-18 25-29 46-29 24 0 45 15 51 36 3-1 7-2 11-2 19 0 34 14 34 32s-15 34-34 34H60z"/>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 1.6l2.3 6.6 7 .3-5.5 4.3 1.9 6.8L12 15.7 6.3 19.6l1.9-6.8L2.7 8.5l7-.3z"/></symbol>
+    <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 0c.6 6.3 5.7 11.4 12 12-6.3.6-11.4 5.7-12 12-.6-6.3-5.7-11.4-12-12C6.3 11.4 11.4 6.3 12 0z"/></symbol>
+    <symbol id="i-plane" viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 001.54.84l10-6.5a1 1 0 000-1.68l-10-6.5A1 1 0 008 5.5z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5h3.2v14H8zm4.8 0H16v14h-3.2z"/></symbol>
+    <symbol id="i-note" viewBox="0 0 16 20">
+      <ellipse cx="5.4" cy="15.4" rx="4.5" ry="3.5" transform="rotate(-20 5.4 15.4)"/>
+      <rect x="8.6" y="1.8" width="1.9" height="13.2"/>
+      <path d="M10.5 1.8c3.3 1.4 4.7 3.5 4 6.4 1.1-3.5-1-4.8-4-5.4z"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ─────────────  progress ribbon  ───────────── -->
+<div class="ribbon" aria-hidden="true"><span class="ribbon__fill" id="ribbonFill"></span></div>
+
+<!-- ─────────────  nav tabs  ───────────── -->
+<header class="topbar">
+  <nav class="tabs" id="tabs" aria-label="Sections">
+    <a class="tabs__brand" href="#top"><span class="tabs__mark">✦</span><span class="tabs__name">vivian</span></a>
+    <div class="tabs__scroll">
+      <a class="tab" href="#about"><i>01</i>about</a>
+      <a class="tab" href="#research"><i>02</i>research</a>
+      <a class="tab" href="#projects"><i>03</i>projects</a>
+      <a class="tab" href="#music"><i>04</i>music</a>
+      <a class="tab" href="#contact"><i>05</i>contact</a>
+    </div>
+    <button class="daynight" id="daynight" type="button" aria-pressed="false" aria-label="Switch to night sky">
+      <span class="daynight__knob"><span class="daynight__sun">☀</span><span class="daynight__moon">☾</span></span>
+    </button>
+  </nav>
+</header>
+
+<main id="top">
+
+<!-- ═════════════  HERO  ═════════════ -->
+<section class="hero" aria-labelledby="heroName">
+  <div class="hero__inner">
+
+    <div class="hero__left">
+      <p class="hero__eyebrow reveal">vol. i <span>·</span> la jolla, california <span>·</span> still writing</p>
+
+      <h1 class="hero__name reveal" id="heroName">
+        <span class="hero__first">Yunjin</span>
+        <span class="hero__paren">(</span><span class="hero__nick">Vivian</span><span class="hero__paren">)</span>
+        <span class="hero__last">Yu</span>
+      </h1>
+
+      <p class="hero__scribble reveal">music, signal processing &amp; all things filtering</p>
+
+      <p class="hero__blurb reveal">
+        ICAM&#8202;–&#8202;Music at <b>UC San Diego</b> with an Electrical Engineering minor.
+        I build sound-related things: spatial-audio research, C++ audio plugins,
+        a theremin on a breadboard, and much more!
+      </p>
+
+      <div class="hero__cta reveal">
+        <a class="btn btn--solid" href="#about">start reading <span class="btn__arrow">↓</span></a>
+        <a class="btn btn--ghost" href="#contact">say hi</a>
+      </div>
+
+      <ul class="hero__meta reveal">
+        <li><svg class="ic"><use href="#i-sparkle"/></svg> researcher at sonic arts</li>
+        <li><svg class="ic"><use href="#i-sparkle"/></svg> singer-songwriter and producer</li>
+        <li><svg class="ic"><use href="#i-sparkle"/></svg> professional parody singer</li>
+      </ul>
+    </div>
+
+    <div class="hero__right">
+      <!-- taped polaroid -->
+      <figure class="polaroid polaroid--hero reveal" data-tilt>
+        <div class="tape tape--tl"></div>
+        <div class="polaroid__frame">
+          <img class="polaroid__img" src="assets/photo.jpg" width="900" height="1200"
+               alt="Vivian looking up at the sky from a boardwalk by the water" loading="lazy"
+               onerror="this.closest('.polaroid__frame').classList.add('is-empty');this.remove();" />
+          <div class="polaroid__art" aria-hidden="true">
+            <span class="pa-sun"></span>
+            <svg class="pa-cloud a" viewBox="0 0 300 120"><use href="#cloudShape"/></svg>
+            <svg class="pa-cloud b" viewBox="0 0 300 120"><use href="#cloudShape"/></svg>
+            <svg class="pa-cloud c" viewBox="0 0 300 120"><use href="#cloudShape"/></svg>
+            <span class="pa-bird"></span>
+          </div>
+        </div>
+        <figcaption class="polaroid__cap">hi, it&rsquo;s me :)</figcaption>
+      </figure>
+
+      <!-- bujo index card -->
+      <nav class="indexcard reveal" aria-label="Page index">
+        <div class="tape tape--tr"></div>
+        <h2 class="indexcard__h">index</h2>
+        <ol class="indexcard__list">
+          <li><a href="#about"><span>who i am</span><em>01</em></a></li>
+          <li><a href="#research"><span>research</span><em>02</em></a></li>
+          <li><a href="#projects"><span>things i built</span><em>03</em></a></li>
+          <li><a href="#music"><span>music &amp; scores</span><em>04</em></a></li>
+          <li><a href="#contact"><span>let&rsquo;s talk</span><em>05</em></a></li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <div class="hero__scrolltip" aria-hidden="true">
+    <span>keep going</span>
+    <svg viewBox="0 0 40 60"><path d="M20 2c-6 14 8 18 2 32-3 7-8 9-9 14" /><path d="M6 40l7 8 10-4"/></svg>
+  </div>
+</section>
+
+
+<!-- ═════════════  01 · ABOUT  ═════════════ -->
+<section class="spread" id="about" aria-labelledby="aboutH">
+  <div class="spread__head reveal">
+    <span class="spread__num">01</span>
+    <h2 class="spread__title" id="aboutH">about
+      <svg class="uline" viewBox="0 0 300 18" preserveAspectRatio="none"><path d="M3 12c52-9 104-9 154-5 42 3 84 6 140-2"/></svg>
+    </h2>
+    <span class="spread__note">a page about me</span>
+  </div>
+
+  <div class="grid grid--about">
+
+    <article class="paper paper--wide reveal">
+      <div class="tape tape--tl"></div>
+      <div class="journey">
+        <span class="journey__stop">classical piano &amp; opera</span>
+        <span class="journey__hop" aria-hidden="true"><svg class="plane"><use href="#i-plane"/></svg></span>
+        <span class="journey__stop">songwriting &amp; production</span>
+        <span class="journey__hop" aria-hidden="true"><svg class="plane"><use href="#i-plane"/></svg></span>
+        <span class="journey__stop">DSP &amp; audio engineering</span>
+      </div>
+      <p>
+        These days I live somewhere between Ableton and VS Code. I&rsquo;m an undergraduate
+        researcher at UCSD&rsquo;s Qualcomm Institute working on spatial audio, I design and build
+        C++ audio plugins I would use for my own music, and I make microcontrollers do my bidding.
+        On the other side of the desk I make parody content, release original music, and post it
+        all to a corner of the internet.
+      </p>
+      <p class="margin-note">
+        <svg class="doodle-arrow" viewBox="0 0 60 40"><path d="M4 32C14 8 34 4 54 12"/><path d="M54 12l-11 1M54 12l-3 10"/></svg>
+        i like the parts where art and engineering refuse to stay in their lanes!
+      </p>
+    </article>
+
+    <article class="paper paper--check reveal">
+      <div class="tape tape--tr"></div>
+      <h3 class="paper__h">quick facts</h3>
+      <ul class="bujo" data-checkable>
+        <li>B.A. Interdisciplinary Computing &amp; the Arts (Music)</li>
+        <li>Electrical Engineering minor</li>
+        <li>Certificate in Arts Management</li>
+        <li>15k+ on social media</li>
+        <li><a href="https://open.spotify.com/artist/43N8fK5tRzwH4SIlCK50Fc" target="_blank" rel="noopener">Listen to my songs!!</a></li>
+      </ul>
+    </article>
+
+    <article class="paper paper--edu reveal">
+      <div class="washi washi--blue"></div>
+      <h3 class="paper__h">education</h3>
+      <div class="entry">
+        <div class="entry__top">
+          <h4>University of California, San Diego</h4>
+          <span class="stamp">grad. june 2027</span>
+        </div>
+        <p class="entry__sub">B.A. Interdisciplinary Computing and the Arts (Music) · minor in Electrical Engineering</p>
+        <p class="entry__body"><b>Coursework:</b> Digital Signal Processing · Machine Learning for Music ·
+          Music Programming · Circuits and Systems</p>
+      </div>
+      <div class="entry">
+        <div class="entry__top">
+          <h4>UCSD Extended Studies</h4>
+          <span class="stamp">certificate</span>
+        </div>
+        <p class="entry__sub">Arts Management</p>
+        <p class="entry__body">Arts management, digital marketing and fundraising for the arts industry.</p>
+      </div>
+    </article>
+
+    <article class="paper paper--kit reveal">
+      <div class="washi washi--gold"></div>
+      <h3 class="paper__h">what&rsquo;s in the toolkit</h3>
+      <dl class="kit">
+        <dt>code</dt>
+        <dd>Python (PyTorch, TensorFlow, scikit-learn, NumPy, Pandas, Matplotlib) · C · C++ · Java · MATLAB · Simulink</dd>
+        <dt>tools</dt>
+        <dd>Git/GitHub · JUCE · LTSpice · PSpice · Onshape · Pure Data</dd>
+        <dt>studio</dt>
+        <dd>AVID Pro Tools (Certified Specialist) · Ableton Live · Adobe Premiere · DaVinci Resolve ·
+            Microsoft Office (Word, Excel, PowerPoint) · Google Workspace · Canva</dd>
+        <dt>bench</dt>
+        <dd>Keysight oscilloscope · multimeter · power supply · waveform generator · soldering iron</dd>
+      </dl>
+    </article>
+
+    <article class="paper paper--now reveal">
+      <div class="tape tape--tl"></div>
+      <h3 class="paper__h">currently...</h3>
+      <ul class="tracker">
+        <li><span class="dot dot--fill"></span><span>optimizing an adaptive soundbeaming algorithm</span></li>
+        <li><span class="dot dot--fill"></span><span>moving the theremin circuit to a protoboard</span></li>
+        <li><span class="dot dot--half"></span><span>looking for directional speakers for the Athenaeum</span></li>
+        <li><span class="dot"></span><span>learning more DSP stuffs!</span></li>
+      </ul>
+    </article>
+
+  </div>
+</section>
+
+
+<!-- ═════════════  02 · RESEARCH  ═════════════ -->
+<section class="spread" id="research" aria-labelledby="researchH">
+  <div class="spread__head reveal">
+    <span class="spread__num">02</span>
+    <h2 class="spread__title" id="researchH">research
+      <svg class="uline" viewBox="0 0 300 18" preserveAspectRatio="none"><path d="M3 12c52-9 104-9 154-5 42 3 84 6 140-2"/></svg>
+    </h2>
+    <span class="spread__note">lab notebook</span>
+  </div>
+
+  <div class="grid grid--research">
+
+    <div class="research__col">
+
+      <article class="paper paper--lab reveal">
+        <div class="washi washi--blue"></div>
+        <h3 class="paper__h">where i am right now</h3>
+        <div class="entry__top">
+          <h4 class="entry__title">Undergraduate Researcher, Sonic Arts R&amp;D</h4>
+          <span class="stamp">july 2026 – present</span>
+        </div>
+        <p class="entry__sub">Qualcomm Institute, UC San Diego · under Professor Shahrokh Yadegari</p>
+
+        <div class="proj">
+          <div class="proj__top">
+            <h5 class="proj__name">Space3D</h5>
+            <span class="stamp stamp--sm">july 2026 – august 2026</span>
+          </div>
+          <p class="proj__sub">a real-time, environment-aware spatializer</p>
+          <ul class="bujo bujo--star">
+            <li>Debugged and optimized <b>HRTF interpolation algorithms</b> for spatial audio
+                using SOFA-format datasets.</li>
+            <li>Built preprocessing that <b>auto-orients SOFA files</b> and maps their measurements
+                onto a consistent coordinate system, then applies HRIR truncation and normalization.</li>
+            <li>Developed a generic <b>KNN triangle-mesh builder</b> so interpolation works across
+                any SOFA file, not just one dataset.</li>
+          </ul>
+        </div>
+
+        <p class="margin-note margin-note--wide">
+          <svg class="doodle-star" viewBox="0 0 24 24"><use href="#i-star"/></svg>
+          <b>in plain english:</b> an HRTF is the fingerprint your head, ears and shoulders leave on a
+          sound before it reaches your eardrum. Measure enough of them and you can place a sound
+          anywhere around a listener wearing ordinary headphones.
+        </p>
+      </article>
+
+      <article class="paper paper--beam reveal">
+        <div class="tape tape--tl"></div>
+        <div class="beam__text">
+          <h3 class="paper__h">up next</h3>
+          <div class="proj__top">
+            <h4 class="entry__title beam__title">adaptive soundbeaming</h4>
+            <span class="stamp stamp--sm">ongoing</span>
+          </div>
+          <p class="beam__body">
+            Soundbeaming steers a narrow column of sound out of a speaker array so it reaches one
+            listener instead of filling the room. The adaptive part is the beam re-aiming itself
+            as that listener moves.
+          </p>
+        </div>
+
+        <svg class="beam" viewBox="16 14 230 122" role="img"
+             aria-label="A speaker array steering a narrow beam of sound that tracks a moving listener.">
+          <g class="beam__array">
+            <rect x="22" y="52" width="17" height="46" rx="5"/>
+            <circle cx="30.5" cy="63" r="3.4"/>
+            <circle cx="30.5" cy="75" r="3.4"/>
+            <circle cx="30.5" cy="87" r="3.4"/>
+          </g>
+          <g class="beam__cone">
+            <path class="beam__lobe" d="M40 75L216 53v44z"/>
+            <path class="beam__wave" d="M90 69a50 50 0 010 12"/>
+            <path class="beam__wave" d="M135 63a95 95 0 010 24"/>
+            <path class="beam__wave" d="M180 58a140 140 0 010 34"/>
+          </g>
+          <g class="beam__listener">
+            <circle cx="216" cy="57" r="10.5"/>
+            <path d="M216 71c-11.5 0-20.5 9.2-20.5 20.6V99h41v-7.4C236.5 80.2 227.5 71 216 71z"/>
+          </g>
+        </svg>
+      </article>
+
+    </div>
+
+    <div class="research__col research__col--side">
+
+      <figure class="paper paper--fig reveal">
+        <div class="tape tape--tr"></div>
+        <svg class="hrtf" viewBox="0 0 200 200" role="img"
+             aria-label="A grid of measured directions around a head, with the three nearest points forming a triangle around one interpolated direction.">
+          <circle class="hrtf__sphere" cx="100" cy="100" r="78"/>
+          <circle class="hrtf__sphere hrtf__sphere--in" cx="100" cy="100" r="52"/>
+              <circle class="hrtf__node" cx="100.00" cy="22.00" r="2.1"/>
+              <circle class="hrtf__node" cx="129.85" cy="27.94" r="2.1"/>
+              <circle class="hrtf__node" cx="155.15" cy="44.85" r="2.1"/>
+              <circle class="hrtf__node" cx="172.06" cy="70.15" r="2.1"/>
+              <circle class="hrtf__node" cx="178.00" cy="100.00" r="2.1"/>
+              <circle class="hrtf__node" cx="172.06" cy="129.85" r="2.1"/>
+              <circle class="hrtf__node" cx="155.15" cy="155.15" r="2.1"/>
+              <circle class="hrtf__node" cx="129.85" cy="172.06" r="2.1"/>
+              <circle class="hrtf__node" cx="100.00" cy="178.00" r="2.1"/>
+              <circle class="hrtf__node" cx="70.15" cy="172.06" r="2.1"/>
+              <circle class="hrtf__node" cx="44.85" cy="155.15" r="2.1"/>
+              <circle class="hrtf__node" cx="27.94" cy="129.85" r="2.1"/>
+              <circle class="hrtf__node" cx="22.00" cy="100.00" r="2.1"/>
+              <circle class="hrtf__node" cx="27.94" cy="70.15" r="2.1"/>
+              <circle class="hrtf__node" cx="44.85" cy="44.85" r="2.1"/>
+              <circle class="hrtf__node" cx="70.15" cy="27.94" r="2.1"/>
+              <circle class="hrtf__node hrtf__node--in" cx="110.14" cy="49.00" r="1.7"/>
+              <circle class="hrtf__node hrtf__node--in" cx="128.89" cy="56.76" r="1.7"/>
+              <circle class="hrtf__node hrtf__node--in" cx="143.24" cy="71.11" r="1.7"/>
+              <circle class="hrtf__node hrtf__node--in" cx="151.00" cy="89.86" r="1.7"/>
+              <circle class="hrtf__node hrtf__node--in" cx="151.00" cy="110.14" r="1.7"/>
+              <circle class="hrtf__node hrtf__node--in" cx="143.24" cy="128.89" r="1.7"/>
+              <circle class="hrtf__node hrtf__node--in" cx="128.89" cy="143.24" r="1.7"/>
+              <circle class="hrtf__node hrtf__node--in" cx="110.14" cy="151.00" r="1.7"/>
+              <circle class="hrtf__node hrtf__node--in" cx="89.86" cy="151.00" r="1.7"/>
+              <circle class="hrtf__node hrtf__node--in" cx="71.11" cy="143.24" r="1.7"/>
+              <circle class="hrtf__node hrtf__node--in" cx="56.76" cy="128.89" r="1.7"/>
+              <circle class="hrtf__node hrtf__node--in" cx="49.00" cy="110.14" r="1.7"/>
+              <circle class="hrtf__node hrtf__node--in" cx="49.00" cy="89.86" r="1.7"/>
+              <circle class="hrtf__node hrtf__node--in" cx="56.76" cy="71.11" r="1.7"/>
+              <circle class="hrtf__node hrtf__node--in" cx="71.11" cy="56.76" r="1.7"/>
+              <circle class="hrtf__node hrtf__node--in" cx="89.86" cy="49.00" r="1.7"/>
+          <g class="hrtf__rotor">
+              <polygon class="hrtf__tri" points="100.00,22.00 129.85,27.94 110.14,49.00"/>
+              <circle class="hrtf__vx" cx="100.00" cy="22.00" r="3.4"/>
+              <circle class="hrtf__vx" cx="129.85" cy="27.94" r="3.4"/>
+              <circle class="hrtf__vx" cx="110.14" cy="49.00" r="3.4"/>
+              <circle class="hrtf__target" cx="113.33" cy="32.98" r="3.6"/>
+          </g>
+          <g class="hrtf__head">
+            <circle cx="100" cy="100" r="19"/>
+            <path class="hrtf__nose" d="M100 77l-5.5 8h11z"/>
+            <ellipse class="hrtf__ear" cx="81.5" cy="100" rx="3.2" ry="5.4"/>
+            <ellipse class="hrtf__ear" cx="118.5" cy="100" rx="3.2" ry="5.4"/>
+          </g>
+        </svg>
+        <figcaption class="fig__cap">
+          <b>fig. 1</b> measured directions around a listener. The three nearest neighbors
+          form the triangle that the interpolated direction <span class="fig__key"></span> is solved inside.
+        </figcaption>
+      </figure>
+
+      <aside class="paper paper--terms reveal">
+        <div class="washi washi--gold"></div>
+        <h3 class="paper__h">glossary corner</h3>
+        <dl class="kit kit--terms">
+          <dt>HRTF</dt><dd>head-related transfer function: how a body colors incoming sound</dd>
+          <dt>SOFA</dt><dd>Spatially Oriented Format for Acoustics</dd>
+          <dt>KNN</dt><dd>k-nearest neighbors: the handful of measured directions closest to the one you actually need</dd>
+        </dl>
+      </aside>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- ═════════════  03 · PROJECTS  ═════════════ -->
+<section class="spread" id="projects" aria-labelledby="projectsH">
+  <div class="spread__head reveal">
+    <span class="spread__num">03</span>
+    <h2 class="spread__title" id="projectsH">projects
+      <svg class="uline" viewBox="0 0 300 18" preserveAspectRatio="none"><path d="M3 12c52-9 104-9 154-5 42 3 84 6 140-2"/></svg>
+    </h2>
+    <span class="spread__note">built &amp; shipped</span>
+  </div>
+
+  <div class="grid grid--projects">
+
+    <article class="card reveal" data-tilt>
+      <div class="tape tape--tc"></div>
+      <span class="card__badge card__badge--wip">in progress</span>
+
+      <div class="card__art card__art--theremin" aria-hidden="true">
+        <svg class="th" viewBox="0 0 240 104" preserveAspectRatio="xMidYMid slice">
+          <line class="th-ground" x1="6" y1="93" x2="234" y2="93"/>
+          <line class="th-axis" x1="70" y1="20" x2="70" y2="84"/>
+          <line class="th-axis" x1="170" y1="20" x2="170" y2="84"/>
+
+          <g class="th-pings th-pings--a">
+            <path class="th-ping" d="M-15 0a15 15 0 0130 0"/>
+            <path class="th-ping" d="M-15 0a15 15 0 0130 0"/>
+          </g>
+          <g class="th-pings th-pings--b">
+            <path class="th-ping" d="M-15 0a15 15 0 0130 0"/>
+            <path class="th-ping" d="M-15 0a15 15 0 0130 0"/>
+          </g>
+
+          <g class="th-sensor th-sensor--a">
+            <rect x="-10" y="-8" width="20" height="8" rx="2.5"/>
+            <circle class="th-lens" cx="0" cy="-11" r="3.4"/>
+          </g>
+          <g class="th-sensor th-sensor--b">
+            <rect x="-10" y="-8" width="20" height="8" rx="2.5"/>
+            <circle class="th-lens" cx="0" cy="-11" r="3.4"/>
+          </g>
+
+          <g class="th-target th-target--a">
+            <rect x="-16" y="-5.5" width="32" height="11" rx="5.5"/>
+            <rect class="th-target__lip" x="-11" y="-2" width="22" height="3" rx="1.5"/>
+          </g>
+          <g class="th-target th-target--b">
+            <rect x="-16" y="-5.5" width="32" height="11" rx="5.5"/>
+            <rect class="th-target__lip" x="-11" y="-2" width="22" height="3" rx="1.5"/>
+          </g>
+
+          <svg class="th-note th-note--1" x="20" y="30" width="13" height="16"><use href="#i-note"/></svg>
+          <svg class="th-note th-note--2" x="118" y="18" width="11" height="14"><use href="#i-note"/></svg>
+          <svg class="th-note th-note--3" x="210" y="34" width="12" height="15"><use href="#i-note"/></svg>
+        </svg>
+      </div>
+
+      <h3 class="card__h">Theramen <span class="card__sub">contactless synthesizer</span></h3>
+      <p class="card__meta">C++ · Daisy Seed (STM32H750) · ongoing</p>
+      <p class="card__body">
+        Two time-of-flight sensors read the distance to each hand and map it to continuous pitch
+        and volume in a theremin-style. Both ship with the same I<sup>2</sup>C address, so each one
+        is reassigned at startup. One-pole filtering smooths the glide, and the audio callback
+        stays decoupled from sensor polling.
+      </p>
+      <ul class="tags"><li>embedded</li><li>DSP</li><li>I²C</li><li>real-time</li></ul>
+      <a class="card__link" href="https://github.com/vivianyunjinyu/theramen" target="_blank" rel="noopener">github ↗</a>
+    </article>
+
+    <article class="card reveal" data-tilt>
+      <div class="tape tape--tc"></div>
+      <div class="card__art card__art--vocoder" aria-hidden="true">
+        <svg class="vo" viewBox="0 0 240 104" preserveAspectRatio="xMidYMid slice">
+          <g class="vo-knob vo-knob--l">
+            <path class="vo-arc" d="M-11 7a13 13 0 1122 0"/>
+            <circle class="vo-cap-c" r="9"/>
+            <line class="vo-point" x1="0" y1="0" x2="7" y2="-5.5"/>
+          </g>
+          <g class="vo-knob vo-knob--r">
+            <path class="vo-arc" d="M-11 7a13 13 0 1122 0"/>
+            <circle class="vo-cap-c" r="9"/>
+            <line class="vo-point" x1="0" y1="0" x2="7" y2="-5.5"/>
+          </g>
+          <rect class="vo-panel" x="46" y="11" width="150" height="85" rx="7"/>
+          <defs>
+            <linearGradient id="voGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#cfe2f5"/>
+              <stop offset="1" stop-color="#5d8ec2"/>
+            </linearGradient>
+          </defs>
+            <g class="vo-band" style="--a:0.825;--b:0.592;--dur:1.78s;--del:0.62s">
+              <rect class="vo-bar" x="52.00" y="17.0" width="5.40" height="73.0" rx="1.6"/>
+              <rect class="vo-cap" x="52.00" y="86.0" width="5.40" height="2.4" rx="1.2"/>
+            </g>
+            <g class="vo-band" style="--a:0.970;--b:0.626;--dur:1.46s;--del:1.20s">
+              <rect class="vo-bar" x="59.80" y="17.0" width="5.40" height="73.0" rx="1.6"/>
+              <rect class="vo-cap" x="59.80" y="86.0" width="5.40" height="2.4" rx="1.2"/>
+            </g>
+            <g class="vo-band" style="--a:0.923;--b:0.505;--dur:1.27s;--del:0.31s">
+              <rect class="vo-bar" x="67.60" y="17.0" width="5.40" height="73.0" rx="1.6"/>
+              <rect class="vo-cap" x="67.60" y="86.0" width="5.40" height="2.4" rx="1.2"/>
+            </g>
+            <g class="vo-band" style="--a:0.770;--b:0.412;--dur:1.41s;--del:0.32s">
+              <rect class="vo-bar" x="75.40" y="17.0" width="5.40" height="73.0" rx="1.6"/>
+              <rect class="vo-cap" x="75.40" y="86.0" width="5.40" height="2.4" rx="1.2"/>
+            </g>
+            <g class="vo-band" style="--a:0.821;--b:0.384;--dur:1.41s;--del:0.37s">
+              <rect class="vo-bar" x="83.20" y="17.0" width="5.40" height="73.0" rx="1.6"/>
+              <rect class="vo-cap" x="83.20" y="86.0" width="5.40" height="2.4" rx="1.2"/>
+            </g>
+            <g class="vo-band" style="--a:0.420;--b:0.281;--dur:1.31s;--del:0.08s">
+              <rect class="vo-bar" x="91.00" y="17.0" width="5.40" height="73.0" rx="1.6"/>
+              <rect class="vo-cap" x="91.00" y="86.0" width="5.40" height="2.4" rx="1.2"/>
+            </g>
+            <g class="vo-band" style="--a:0.598;--b:0.305;--dur:1.58s;--del:0.47s">
+              <rect class="vo-bar" x="98.80" y="17.0" width="5.40" height="73.0" rx="1.6"/>
+              <rect class="vo-cap" x="98.80" y="86.0" width="5.40" height="2.4" rx="1.2"/>
+            </g>
+            <g class="vo-band" style="--a:0.456;--b:0.339;--dur:1.79s;--del:0.50s">
+              <rect class="vo-bar" x="106.60" y="17.0" width="5.40" height="73.0" rx="1.6"/>
+              <rect class="vo-cap" x="106.60" y="86.0" width="5.40" height="2.4" rx="1.2"/>
+            </g>
+            <g class="vo-band" style="--a:0.356;--b:0.165;--dur:1.73s;--del:0.91s">
+              <rect class="vo-bar" x="114.40" y="17.0" width="5.40" height="73.0" rx="1.6"/>
+              <rect class="vo-cap" x="114.40" y="86.0" width="5.40" height="2.4" rx="1.2"/>
+            </g>
+            <g class="vo-band" style="--a:0.396;--b:0.236;--dur:1.68s;--del:0.36s">
+              <rect class="vo-bar" x="122.20" y="17.0" width="5.40" height="73.0" rx="1.6"/>
+              <rect class="vo-cap" x="122.20" y="86.0" width="5.40" height="2.4" rx="1.2"/>
+            </g>
+            <g class="vo-band" style="--a:0.213;--b:0.175;--dur:1.82s;--del:0.95s">
+              <rect class="vo-bar" x="130.00" y="17.0" width="5.40" height="73.0" rx="1.6"/>
+              <rect class="vo-cap" x="130.00" y="86.0" width="5.40" height="2.4" rx="1.2"/>
+            </g>
+            <g class="vo-band" style="--a:0.282;--b:0.237;--dur:1.34s;--del:0.65s">
+              <rect class="vo-bar" x="137.80" y="17.0" width="5.40" height="73.0" rx="1.6"/>
+              <rect class="vo-cap" x="137.80" y="86.0" width="5.40" height="2.4" rx="1.2"/>
+            </g>
+            <g class="vo-band" style="--a:0.225;--b:0.167;--dur:1.79s;--del:0.47s">
+              <rect class="vo-bar" x="145.60" y="17.0" width="5.40" height="73.0" rx="1.6"/>
+              <rect class="vo-cap" x="145.60" y="86.0" width="5.40" height="2.4" rx="1.2"/>
+            </g>
+            <g class="vo-band" style="--a:0.164;--b:0.080;--dur:1.65s;--del:0.13s">
+              <rect class="vo-bar" x="153.40" y="17.0" width="5.40" height="73.0" rx="1.6"/>
+              <rect class="vo-cap" x="153.40" y="86.0" width="5.40" height="2.4" rx="1.2"/>
+            </g>
+            <g class="vo-band" style="--a:0.191;--b:0.139;--dur:1.16s;--del:0.55s">
+              <rect class="vo-bar" x="161.20" y="17.0" width="5.40" height="73.0" rx="1.6"/>
+              <rect class="vo-cap" x="161.20" y="86.0" width="5.40" height="2.4" rx="1.2"/>
+            </g>
+            <g class="vo-band" style="--a:0.108;--b:0.080;--dur:1.25s;--del:0.58s">
+              <rect class="vo-bar" x="169.00" y="17.0" width="5.40" height="73.0" rx="1.6"/>
+              <rect class="vo-cap" x="169.00" y="86.0" width="5.40" height="2.4" rx="1.2"/>
+            </g>
+            <g class="vo-band" style="--a:0.133;--b:0.085;--dur:1.45s;--del:1.08s">
+              <rect class="vo-bar" x="176.80" y="17.0" width="5.40" height="73.0" rx="1.6"/>
+              <rect class="vo-cap" x="176.80" y="86.0" width="5.40" height="2.4" rx="1.2"/>
+            </g>
+            <g class="vo-band" style="--a:0.111;--b:0.089;--dur:1.86s;--del:0.29s">
+              <rect class="vo-bar" x="184.60" y="17.0" width="5.40" height="73.0" rx="1.6"/>
+              <rect class="vo-cap" x="184.60" y="86.0" width="5.40" height="2.4" rx="1.2"/>
+            </g>
+        </svg>
+      </div>
+      <h3 class="card__h">Vocoduh <span class="card__sub">FFT channel vocoder</span></h3>
+      <p class="card__meta">C++ · JUCE · may 2026</p>
+      <p class="card__body">
+        A real-time channel vocoder with overlap-add STFT (Kaiser windowing), mel-scale band
+        grouping, and per-band envelope smoothing. Carrier whitening and weighted noise
+        injection keep unvoiced consonants intelligible, with sidechain routing and a custom
+        animated GUI.
+      </p>
+      <ul class="tags"><li>STFT/IFFT</li><li>mel-scale</li><li>plugin</li><li>UI</li></ul>
+      <a class="card__link" href="https://github.com/vivianyunjinyu/FFT-Vocoder-Plugin" target="_blank" rel="noopener">github ↗</a>
+    </article>
+
+    <article class="card reveal" data-tilt>
+      <div class="tape tape--tc"></div>
+      <div class="card__art card__art--lfo" aria-hidden="true">
+        <svg class="wh" viewBox="0 0 240 104" preserveAspectRatio="xMidYMid slice">
+          <g class="wh-grid">
+            <line x1="6" y1="26" x2="234" y2="26"/>
+            <line x1="6" y1="56" x2="234" y2="56"/>
+            <line x1="6" y1="86" x2="234" y2="86"/>
+            <line x1="82" y1="6" x2="82" y2="98"/>
+            <line x1="158" y1="6" x2="158" y2="98"/>
+          </g>
+          <g class="wh-wave">
+          <rect class="wh-bar" x="10.0" y="51.50" width="1.6" height="9.00" rx=".8" style="--g1:0.100;--g2:0.100"/>
+          <rect class="wh-bar" x="13.0" y="39.93" width="1.6" height="32.13" rx=".8" style="--g1:0.100;--g2:0.100"/>
+          <rect class="wh-bar" x="16.0" y="50.39" width="1.6" height="11.23" rx=".8" style="--g1:0.100;--g2:0.100"/>
+          <rect class="wh-bar" x="19.0" y="46.41" width="1.6" height="19.19" rx=".8" style="--g1:0.101;--g2:0.100"/>
+          <rect class="wh-bar" x="22.0" y="44.24" width="1.6" height="23.52" rx=".8" style="--g1:0.102;--g2:0.101"/>
+          <rect class="wh-bar" x="25.0" y="43.38" width="1.6" height="25.24" rx=".8" style="--g1:0.103;--g2:0.101"/>
+          <rect class="wh-bar" x="28.0" y="43.17" width="1.6" height="25.66" rx=".8" style="--g1:0.105;--g2:0.102"/>
+          <rect class="wh-bar" x="31.0" y="42.32" width="1.6" height="27.37" rx=".8" style="--g1:0.107;--g2:0.103"/>
+          <rect class="wh-bar" x="34.0" y="47.12" width="1.6" height="17.75" rx=".8" style="--g1:0.110;--g2:0.104"/>
+          <rect class="wh-bar" x="37.0" y="50.67" width="1.6" height="10.67" rx=".8" style="--g1:0.113;--g2:0.105"/>
+          <rect class="wh-bar" x="40.0" y="41.30" width="1.6" height="29.39" rx=".8" style="--g1:0.117;--g2:0.106"/>
+          <rect class="wh-bar" x="43.0" y="51.27" width="1.6" height="9.46" rx=".8" style="--g1:0.122;--g2:0.108"/>
+          <rect class="wh-bar" x="46.0" y="38.99" width="1.6" height="34.03" rx=".8" style="--g1:0.128;--g2:0.110"/>
+          <rect class="wh-bar" x="49.0" y="48.74" width="1.6" height="14.52" rx=".8" style="--g1:0.135;--g2:0.112"/>
+          <rect class="wh-bar" x="52.0" y="45.52" width="1.6" height="20.97" rx=".8" style="--g1:0.143;--g2:0.115"/>
+          <rect class="wh-bar" x="55.0" y="46.52" width="1.6" height="18.95" rx=".8" style="--g1:0.152;--g2:0.118"/>
+          <rect class="wh-bar" x="58.0" y="43.81" width="1.6" height="24.38" rx=".8" style="--g1:0.163;--g2:0.121"/>
+          <rect class="wh-bar" x="61.0" y="43.28" width="1.6" height="25.45" rx=".8" style="--g1:0.176;--g2:0.125"/>
+          <rect class="wh-bar" x="64.0" y="40.85" width="1.6" height="30.29" rx=".8" style="--g1:0.190;--g2:0.129"/>
+          <rect class="wh-bar" x="67.0" y="47.65" width="1.6" height="16.71" rx=".8" style="--g1:0.207;--g2:0.134"/>
+          <rect class="wh-bar" x="70.0" y="48.51" width="1.6" height="14.97" rx=".8" style="--g1:0.226;--g2:0.139"/>
+          <rect class="wh-bar" x="73.0" y="42.99" width="1.6" height="26.03" rx=".8" style="--g1:0.248;--g2:0.145"/>
+          <rect class="wh-bar" x="76.0" y="50.95" width="1.6" height="10.10" rx=".8" style="--g1:0.273;--g2:0.152"/>
+          <rect class="wh-bar" x="79.0" y="38.55" width="1.6" height="34.90" rx=".8" style="--g1:0.301;--g2:0.159"/>
+          <rect class="wh-bar" x="82.0" y="47.44" width="1.6" height="17.11" rx=".8" style="--g1:0.334;--g2:0.168"/>
+          <rect class="wh-bar" x="85.0" y="44.51" width="1.6" height="22.98" rx=".8" style="--g1:0.370;--g2:0.177"/>
+          <rect class="wh-bar" x="88.0" y="49.04" width="1.6" height="13.92" rx=".8" style="--g1:0.412;--g2:0.187"/>
+          <rect class="wh-bar" x="91.0" y="44.36" width="1.6" height="23.28" rx=".8" style="--g1:0.458;--g2:0.199"/>
+          <rect class="wh-bar" x="94.0" y="43.77" width="1.6" height="24.45" rx=".8" style="--g1:0.511;--g2:0.211"/>
+          <rect class="wh-bar" x="97.0" y="39.92" width="1.6" height="32.17" rx=".8" style="--g1:0.571;--g2:0.225"/>
+          <rect class="wh-bar" x="100.0" y="47.99" width="1.6" height="16.03" rx=".8" style="--g1:0.638;--g2:0.241"/>
+          <rect class="wh-bar" x="103.0" y="46.27" width="1.6" height="19.47" rx=".8" style="--g1:0.714;--g2:0.258"/>
+          <rect class="wh-bar" x="106.0" y="44.85" width="1.6" height="22.31" rx=".8" style="--g1:0.799;--g2:0.277"/>
+          <rect class="wh-bar" x="109.0" y="50.47" width="1.6" height="11.06" rx=".8" style="--g1:0.894;--g2:0.298"/>
+          <rect class="wh-bar" x="112.0" y="38.68" width="1.6" height="34.64" rx=".8" style="--g1:1.000;--g2:0.322"/>
+          <rect class="wh-bar" x="115.0" y="46.52" width="1.6" height="18.95" rx=".8" style="--g1:1.000;--g2:0.348"/>
+          <rect class="wh-bar" x="118.0" y="43.47" width="1.6" height="25.07" rx=".8" style="--g1:1.000;--g2:0.377"/>
+          <rect class="wh-bar" x="121.0" y="51.36" width="1.6" height="9.28" rx=".8" style="--g1:1.000;--g2:0.409"/>
+          <rect class="wh-bar" x="124.0" y="44.93" width="1.6" height="22.13" rx=".8" style="--g1:1.000;--g2:0.445"/>
+          <rect class="wh-bar" x="127.0" y="44.70" width="1.6" height="22.60" rx=".8" style="--g1:1.000;--g2:0.485"/>
+          <rect class="wh-bar" x="130.0" y="39.53" width="1.6" height="32.94" rx=".8" style="--g1:1.000;--g2:0.529"/>
+          <rect class="wh-bar" x="133.0" y="48.18" width="1.6" height="15.63" rx=".8" style="--g1:1.000;--g2:0.579"/>
+          <rect class="wh-bar" x="136.0" y="44.07" width="1.6" height="23.87" rx=".8" style="--g1:1.000;--g2:0.634"/>
+          <rect class="wh-bar" x="139.0" y="46.76" width="1.6" height="18.49" rx=".8" style="--g1:1.000;--g2:0.697"/>
+          <rect class="wh-bar" x="142.0" y="49.78" width="1.6" height="12.45" rx=".8" style="--g1:1.000;--g2:0.767"/>
+          <rect class="wh-bar" x="145.0" y="39.39" width="1.6" height="33.22" rx=".8" style="--g1:1.000;--g2:0.845"/>
+          <rect class="wh-bar" x="148.0" y="45.96" width="1.6" height="20.08" rx=".8" style="--g1:1.000;--g2:0.934"/>
+          <rect class="wh-bar" x="151.0" y="42.49" width="1.6" height="27.02" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="154.0" y="48.82" width="1.6" height="14.36" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="157.0" y="45.44" width="1.6" height="21.12" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="160.0" y="46.07" width="1.6" height="19.85" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="163.0" y="39.67" width="1.6" height="32.65" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="166.0" y="48.31" width="1.6" height="15.39" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="169.0" y="42.05" width="1.6" height="27.90" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="172.0" y="48.59" width="1.6" height="14.82" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="175.0" y="48.84" width="1.6" height="14.32" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="178.0" y="40.65" width="1.6" height="30.69" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="181.0" y="45.70" width="1.6" height="20.59" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="184.0" y="41.70" width="1.6" height="28.61" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="187.0" y="46.49" width="1.6" height="19.02" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="190.0" y="45.82" width="1.6" height="20.36" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="193.0" y="47.85" width="1.6" height="16.29" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="196.0" y="40.30" width="1.6" height="31.41" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="199.0" y="48.44" width="1.6" height="15.12" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="202.0" y="40.36" width="1.6" height="31.29" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="205.0" y="50.24" width="1.6" height="11.51" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="208.0" y="47.67" width="1.6" height="16.66" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="211.0" y="42.40" width="1.6" height="27.21" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="214.0" y="45.68" width="1.6" height="20.64" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="217.0" y="41.19" width="1.6" height="29.62" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="220.0" y="44.49" width="1.6" height="23.02" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="223.0" y="46.03" width="1.6" height="19.94" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="226.0" y="49.98" width="1.6" height="12.04" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          <rect class="wh-bar" x="229.0" y="41.31" width="1.6" height="29.38" rx=".8" style="--g1:1.000;--g2:1.000"/>
+          </g>
+          <path class="wh-fill" d="M10 90C62 90 90 84 112 22L230 22V98H10Z"/>
+          <path class="wh-curve" d="M10 90C62 90 90 84 112 22L230 22"/>
+          <circle class="wh-knob" cx="10" cy="90" r="6"/>
+          <circle class="wh-knob wh-knob--drag" cx="112" cy="22" r="6"/>
+        </svg>
+      </div>
+      <h3 class="card__h">Whoosh <span class="card__sub">tempo-synced LFO</span></h3>
+      <p class="card__meta">C++ · JUCE · june 2026</p>
+      <p class="card__body">
+        A host-synced LFO for rhythmic volume shaping and sidechain-style ducking. The modulation
+        curve is drawn right in the UI with a draggable two-breakpoint editor, backed by a 10-bit
+        lookup table that regenerates on a dirty flag instead of on every block.
+      </p>
+      <ul class="tags"><li>modulation</li><li>dirty-flag</li><li>plugin</li><li>UI</li></ul>
+      <a class="card__link" href="https://github.com/vivianyunjinyu/Whoosh-Plugin" target="_blank" rel="noopener">github ↗</a>
+    </article>
+
+  </div>
+</section>
+
+<!-- ═════════════  04 · MUSIC  ═════════════ -->
+<section class="spread spread--music" id="music" aria-labelledby="musicH">
+  <div class="spread__head reveal">
+    <span class="spread__num">04</span>
+    <h2 class="spread__title" id="musicH">music
+      <svg class="uline" viewBox="0 0 300 18" preserveAspectRatio="none"><path d="M3 12c52-9 104-9 154-5 42 3 84 6 140-2"/></svg>
+    </h2>
+    <span class="spread__note">the loud half of the notebook</span>
+  </div>
+
+  <div class="grid grid--music">
+
+    <article class="paper paper--releases reveal">
+      <div class="washi washi--blue"></div>
+      <h3 class="paper__h">releases</h3>
+      <ul class="tracklist">
+        <li><span class="tracklist__n">01</span><a class="tracklist__t" href="https://open.spotify.com/album/6eIlqHfQ9diFlxDwixf9X7" target="_blank" rel="noopener">rlly <em>piano version</em></a><span class="tracklist__y">2025</span></li>
+        <li><span class="tracklist__n">02</span><a class="tracklist__t" href="https://open.spotify.com/album/28uz7woKHhIjyUvm06UksS" target="_blank" rel="noopener">(not) cliché</a><span class="tracklist__y">2025</span></li>
+        <li><span class="tracklist__n">03</span><a class="tracklist__t" href="https://open.spotify.com/album/3henFqHoTpJt0AfgqhXd3e" target="_blank" rel="noopener">rlly</a><span class="tracklist__y">2025</span></li>
+        <li><span class="tracklist__n">04</span><a class="tracklist__t" href="https://open.spotify.com/album/0YG2jYKQ2eCiouQQg6G6fX" target="_blank" rel="noopener">dream</a><span class="tracklist__y">2024</span></li>
+        <li><span class="tracklist__n">05</span><a class="tracklist__t" href="https://open.spotify.com/album/21COMwWsU94sRd4qPDmBuN" target="_blank" rel="noopener">happier place</a><span class="tracklist__y">2022</span></li>
+      </ul>
+      <a class="btn btn--small" href="https://open.spotify.com/artist/43N8fK5tRzwH4SIlCK50Fc" target="_blank" rel="noopener">find me on Spotify ↗</a>
+    </article>
+
+    <article class="paper paper--scores reveal">
+      <div class="tape tape--tr"></div>
+      <h3 class="paper__h">original game scores</h3>
+
+      <div class="score" data-expand>
+        <button class="score__top" type="button" aria-expanded="false">
+          <span class="score__name">Open-Ended</span>
+          <span class="score__meta">Unlikely Collaborators™ Game Jam · mar–apr 2026</span>
+          <span class="chev" aria-hidden="true">+</span>
+        </button>
+        <div class="score__body">
+          <div class="score__inner">
+            <p>An 18-day sprint. Composed and produced <b>all five soundtracks</b>, genres running from medieval to bedroom pop.</p>
+            <div class="score__links">
+              <a class="itch" href="https://confusednarwhal.itch.io/open-ended" target="_blank" rel="noopener">
+                <span class="itch__tag">itch.io</span> play the game ↗
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="score" data-expand>
+        <button class="score__top" type="button" aria-expanded="false">
+          <span class="score__name">Tutoring: After Hours <span class="prize">3rd place + audience choice</span></span>
+          <span class="score__meta">Game Expo, Otis College of Design · feb 2026</span>
+          <span class="chev" aria-hidden="true">+</span>
+        </button>
+        <div class="score__body">
+          <div class="score__inner">
+            <p>Two-week sprint. Composed and produced <b>all five soundtracks</b>, orchestral through dance pop. The OST is out as an EP.</p>
+            <div class="score__links">
+              <a class="itch" href="https://neapolitandeer.itch.io/tutoring-after-hours" target="_blank" rel="noopener">
+                <span class="itch__tag">itch.io</span> play the game ↗
+              </a>
+              <a class="inline-link" href="https://open.spotify.com/album/2E4cDWaWVq7ue1aga801Yl" target="_blank" rel="noopener">hear the EP ↗</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="score" data-expand>
+        <button class="score__top" type="button" aria-expanded="false">
+          <span class="score__name">Turpentine</span>
+          <span class="score__meta">Project Forge, UCSD Video Game Dev Club · jan–feb 2026</span>
+          <span class="chev" aria-hidden="true">+</span>
+        </button>
+        <div class="score__body">
+          <div class="score__inner">
+            <p>Six-week sprint. Composed and produced <b>all four soundtracks</b>, noir jazz on one end, dark ambient on the other.</p>
+            <div class="score__links">
+              <a class="itch" href="https://fullofbees.itch.io/turpentine-for-the-vgdc-game-jam" target="_blank" rel="noopener">
+                <span class="itch__tag">itch.io</span> play the game ↗
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="score" data-expand>
+        <button class="score__top" type="button" aria-expanded="false">
+          <span class="score__name">The Wishing Well</span>
+          <span class="score__meta">personal project w/ Abby Chen · mar 2025</span>
+          <span class="chev" aria-hidden="true">+</span>
+        </button>
+        <div class="score__body">
+          <div class="score__inner">
+            <p>Written, recorded and finished in two days. Proof that a deadline is a kind of instrument.</p>
+            <div class="score__links">
+              <a class="itch" href="https://abby-chen.itch.io/the-wishing-well" target="_blank" rel="noopener">
+                <span class="itch__tag">itch.io</span> play the game ↗
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="paper paper--parody reveal">
+      <div class="washi washi--gold"></div>
+      <h3 class="paper__h">goofs and giggles</h3>
+
+      <p class="parody__lead">
+        Original parody songs about school. I go to class and I sing about it&nbsp;:P
+      </p>
+      <p class="parody__body">
+        Find me <b>@vivianyaur</b> (MOM IM FAMOUSSS)
+      </p>
+
+      <div class="btnrow">
+        <a class="btn btn--small" href="https://www.instagram.com/vivianyaur/" target="_blank" rel="noopener">Instagram ↗</a>
+        <a class="btn btn--small" href="https://www.tiktok.com/@vivianyaur" target="_blank" rel="noopener">TikTok ↗</a>
+        <a class="btn btn--small" href="https://www.youtube.com/@vivianyaur" target="_blank" rel="noopener">YouTube ↗</a>
+      </div>
+
+      <svg class="ee" viewBox="0 0 440 74" aria-hidden="true">
+        <path class="ee-trace" pathLength="100" d="M12 44 H52 l6-12 12 24 12-24 12 24 12-24 6 12 H262a7.5 7.5 0 0 1 15 0 a7.5 7.5 0 0 1 15 0 a7.5 7.5 0 0 1 15 0 a7.5 7.5 0 0 1 15 0 H392"/>
+
+        <!-- capacitor -->
+        <rect class="ee-mask" x="150" y="37" width="12" height="14"/>
+        <line class="ee-part" x1="150" y1="30" x2="150" y2="58"/>
+        <line class="ee-part" x1="162" y1="30" x2="162" y2="58"/>
+
+        <!-- diode -->
+        <path class="ee-fill" d="M200 32v24l22-12z"/>
+        <line class="ee-part" x1="222" y1="31" x2="222" y2="57"/>
+
+        <!-- speaker -->
+        <path class="ee-fill" d="M396 35h8l11-10v38l-11-10h-8z"/>
+        <path class="ee-part ee-part--arc" d="M421 32a13 13 0 0 1 0 24"/>
+        <path class="ee-part ee-part--arc" d="M427 26a21 21 0 0 1 0 36"/>
+
+        <circle class="ee-pad" cx="12" cy="44" r="4.5"/>
+        <circle class="ee-pad" cx="112" cy="44" r="3.4" style="--p:.55s"/>
+        <circle class="ee-pad" cx="262" cy="44" r="3.4" style="--p:1.1s"/>
+
+        <path class="ee-pulse" pathLength="100" d="M12 44 H52 l6-12 12 24 12-24 12 24 12-24 6 12 H262a7.5 7.5 0 0 1 15 0 a7.5 7.5 0 0 1 15 0 a7.5 7.5 0 0 1 15 0 a7.5 7.5 0 0 1 15 0 H392"/>
+
+        <svg class="ee-note ee-note--1" x="72" y="2" width="13" height="16"><use href="#i-note"/></svg>
+        <svg class="ee-note ee-note--2" x="236" y="4" width="11" height="14"><use href="#i-note"/></svg>
+        <svg class="ee-note ee-note--3" x="344" y="0" width="14" height="17"><use href="#i-note"/></svg>
+      </svg>
+
+    </article>
+
+    <article class="paper paper--demos reveal">
+      <div class="washi washi--gold"></div>
+      <h3 class="paper__h">demos &amp; experiments</h3>
+      <ul class="demos">
+        <li class="demo">
+          <button class="demo__play" type="button" data-src="assets/audio/cloud-drums.mp3"
+                  aria-label="Play Cloud Drums">
+            <svg class="demo__ico demo__ico--play" viewBox="0 0 24 24"><use href="#i-play"/></svg>
+            <svg class="demo__ico demo__ico--pause" viewBox="0 0 24 24"><use href="#i-pause"/></svg>
+          </button>
+          <div class="demo__meta">
+            <b class="demo__title">Cloud Drums</b>
+            <span class="demo__desc">Taiko &amp; adlibs... huh</span>
+            <span class="demo__bar" aria-hidden="true"><i></i></span>
+          </div>
+        </li>
+        <li class="demo">
+          <button class="demo__play" type="button" data-src="assets/audio/arcade-hectic.mp3"
+                  aria-label="Play Arcade-y Hectic Theme">
+            <svg class="demo__ico demo__ico--play" viewBox="0 0 24 24"><use href="#i-play"/></svg>
+            <svg class="demo__ico demo__ico--pause" viewBox="0 0 24 24"><use href="#i-pause"/></svg>
+          </button>
+          <div class="demo__meta">
+            <b class="demo__title">Arcade-y Hectic Theme</b>
+            <span class="demo__desc">Was feeling evil MWAHAHA</span>
+            <span class="demo__bar" aria-hidden="true"><i></i></span>
+          </div>
+        </li>
+        <li class="demo">
+          <button class="demo__play" type="button" data-src="assets/audio/twinkle-twinkle.mp3"
+                  aria-label="Play Twinkle Twinkle (EDM / hip-hop remix)">
+            <svg class="demo__ico demo__ico--play" viewBox="0 0 24 24"><use href="#i-play"/></svg>
+            <svg class="demo__ico demo__ico--pause" viewBox="0 0 24 24"><use href="#i-pause"/></svg>
+          </button>
+          <div class="demo__meta">
+            <b class="demo__title">Twinkle Twinkle (EDM / hip-hop remix)</b>
+            <span class="demo__desc">HuTao enters the groupchat</span>
+            <span class="demo__bar" aria-hidden="true"><i></i></span>
+          </div>
+        </li>
+        <li class="demo">
+          <button class="demo__play" type="button" data-src="assets/audio/photosynthesis-rap.mp3"
+                  aria-label="Play Photosynthesis Rap">
+            <svg class="demo__ico demo__ico--play" viewBox="0 0 24 24"><use href="#i-play"/></svg>
+            <svg class="demo__ico demo__ico--pause" viewBox="0 0 24 24"><use href="#i-pause"/></svg>
+          </button>
+          <div class="demo__meta">
+            <b class="demo__title">Photosynthesis Rap</b>
+            <span class="demo__desc">AP Bio project. I got an A.</span>
+            <span class="demo__bar" aria-hidden="true"><i></i></span>
+          </div>
+        </li>
+      </ul>
+    </article>
+
+    <article class="paper paper--social reveal">
+      <div class="tape tape--tl"></div>
+      <h3 class="paper__h">where the songs go</h3>
+      <div class="social__row">
+      <div class="stat">
+        <div><b>2M+</b><span>monthly views</span></div>
+        <div><b>15k+</b><span>followers</span></div>
+      </div>
+      <div class="linkrow">
+        <a class="chip" href="https://www.instagram.com/vivianyaur/" target="_blank" rel="noopener">Instagram <em>@vivianyaur</em></a>
+        <a class="chip" href="https://www.tiktok.com/@vivianyaur" target="_blank" rel="noopener">TikTok <em>@vivianyaur</em></a>
+        <a class="chip" href="https://www.youtube.com/@vivianyaur" target="_blank" rel="noopener">YouTube <em>@vivianyaur</em></a>
+        <a class="chip" href="https://open.spotify.com/artist/43N8fK5tRzwH4SIlCK50Fc" target="_blank" rel="noopener">Spotify <em>Vivian Yu</em></a>
+        <a class="chip" href="https://music.apple.com/us/artist/vivian-yu/1533649956" target="_blank" rel="noopener">Apple Music <em>Vivian Yu</em></a>
+        <a class="chip" href="https://music.youtube.com/@vivianyaur" target="_blank" rel="noopener">YT Music <em>Vivian Yu</em></a>
+      </div>
+      <p class="quote">&ldquo;i write (mostly) happy songs about people around me :)&rdquo;</p>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<!-- ═════════════  05 · CONTACT  ═════════════ -->
+<section class="spread spread--contact" id="contact" aria-labelledby="contactH">
+  <div class="spread__head reveal">
+    <span class="spread__num">05</span>
+    <h2 class="spread__title" id="contactH">contact
+      <svg class="uline" viewBox="0 0 300 18" preserveAspectRatio="none"><path d="M3 12c52-9 104-9 154-5 42 3 84 6 140-2"/></svg>
+    </h2>
+    <span class="spread__note">the back cover</span>
+  </div>
+
+  <div class="grid grid--contact">
+
+    <article class="paper paper--say reveal">
+      <div class="tape tape--tl"></div>
+      <h3 class="paper__h">say hello</h3>
+      <p>Music, research, plugins, scoring a game, or just to talk about clouds. The inbox is open.</p>
+
+      <button class="mailbtn" id="copyMail" type="button" data-mail="vivianyunjinyu@gmail.com">
+        <span class="mailbtn__label">vivianyunjinyu@gmail.com</span>
+        <span class="mailbtn__hint">click to copy</span>
+      </button>
+
+      <ul class="contactlist">
+        <li><a href="mailto:vivianyunjinyu@gmail.com">personal email</a><span>vivianyunjinyu@gmail.com</span></li>
+        <li><a href="mailto:v8yu@ucsd.edu">school email</a><span>v8yu@ucsd.edu</span></li>
+        <li><a href="https://www.linkedin.com/in/vivianyunjinyu/" target="_blank" rel="noopener">LinkedIn ↗</a><span>/in/vivianyunjinyu</span></li>
+        <li><a href="https://github.com/vivianyunjinyu" target="_blank" rel="noopener">GitHub ↗</a><span>@vivianyunjinyu</span></li>
+        <li><a href="https://www.instagram.com/vivianyaur/" target="_blank" rel="noopener">Instagram ↗</a><span>@vivianyaur</span></li>
+        <li><a href="https://www.tiktok.com/@vivianyaur" target="_blank" rel="noopener">TikTok ↗</a><span>@vivianyaur</span></li>
+        <li><a href="https://www.youtube.com/@vivianyaur" target="_blank" rel="noopener">YouTube ↗</a><span>@vivianyaur</span></li>
+      </ul>
+      <p class="loc">based in La Jolla, CA · from Los Angeles</p>
+    </article>
+
+    <article class="paper paper--resume reveal">
+      <div class="washi washi--blue"></div>
+      <div class="entry__top">
+        <h3 class="paper__h paper__h--flush">résumé</h3>
+        <a class="btn btn--small" href="assets/resume.pdf" download>download PDF ↓</a>
+      </div>
+      <p class="resume__note">the tidy one-page version, for the people who need one.</p>
+
+      <div class="resume__frame">
+        <iframe class="resume__pdf" src="assets/resume.pdf#view=FitH&amp;toolbar=0"
+                title="Résumé of Yunjin (Vivian) Yu" loading="lazy"></iframe>
+        <a class="resume__fallback" href="assets/resume.pdf" target="_blank" rel="noopener">
+          <span class="resume__page">
+            <b>Yunjin (Vivian) Yu</b>
+            <i>résumé · 1 page</i>
+            <em>tap to open ↗</em>
+          </span>
+        </a>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+
+<!-- ═════════════  crochet line  ═════════════ -->
+<section class="line" aria-labelledby="crochetH">
+  <h2 class="line__h reveal" id="crochetH">meet my children:</h2>
+  <div class="line__wrap reveal">
+    <svg class="line__string" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 4Q50 56 100 4" vector-effect="non-scaling-stroke"/>
+    </svg>
+    <div class="line__pegs">
+        <figure class="peg" style="--y:10px;--r:-2.6deg;--s:3.8s">
+          <span class="peg__clip" aria-hidden="true"></span>
+          <span class="peg__frame"><img src="assets/crochet1.jpg" alt="Crochet project" loading="lazy" /></span>
+        </figure>
+        <figure class="peg" style="--y:24px;--r:1.8deg;--s:4.2s">
+          <span class="peg__clip" aria-hidden="true"></span>
+          <span class="peg__frame"><img src="assets/crochet2.jpg" alt="Crochet project" loading="lazy" /></span>
+        </figure>
+        <figure class="peg" style="--y:24px;--r:-1.4deg;--s:4.6s">
+          <span class="peg__clip" aria-hidden="true"></span>
+          <span class="peg__frame"><img src="assets/crochet3.jpg" alt="Crochet project" loading="lazy" /></span>
+        </figure>
+        <figure class="peg" style="--y:10px;--r:2.4deg;--s:5.0s">
+          <span class="peg__clip" aria-hidden="true"></span>
+          <span class="peg__frame"><img src="assets/crochet4.jpg" alt="Crochet project" loading="lazy" /></span>
+        </figure>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer__inner">
+    <p class="footer__sign">thanks for reading&nbsp;:)</p>
+    <p class="footer__meta">Vivian Yu <span id="year">2026</span></p>
+    <button class="totop" id="totop" type="button">back to the top ↑</button>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
