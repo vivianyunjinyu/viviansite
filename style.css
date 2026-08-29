@@ -3,8 +3,27 @@
    plain css. no build step. mobile first.
    ============================================================ */
 
+/* registers the sky-gradient stops as animatable colors so the browser
+   guarantees smooth interpolation as they change (e.g. on a page flip)
+   instead of a same-frame value swap — plain background-color/color/
+   border-color properties elsewhere already animate fine via var()
+   indirection without needing this; it's specifically the multi-stop
+   gradient built from these four that needs the explicit type. */
+@property --sky-1{ syntax:'<color>'; inherits:true; initial-value:#5aa3d8; }
+@property --sky-2{ syntax:'<color>'; inherits:true; initial-value:#8fc4e6; }
+@property --sky-3{ syntax:'<color>'; inherits:true; initial-value:#cfe4f3; }
+@property --sky-4{ syntax:'<color>'; inherits:true; initial-value:#f6ecdf; }
+
 /* ---------- tokens : day ---------- */
 :root{
+  /* @property alone only makes --sky-1..4 *capable* of smooth transitions -
+     they still need a transition declared wherever they're set (:root and
+     every html[data-time] block below all target the same <html> element),
+     otherwise they snap instantly and .sky__wash's `transition:background`
+     has nothing to smoothly interpolate (a transition on `background` does
+     not reliably interpolate between two already-fully-computed gradient()
+     strings on its own). */
+  transition: --sky-1 1.1s var(--ease), --sky-2 1.1s var(--ease), --sky-3 1.1s var(--ease), --sky-4 1.1s var(--ease);
   --paper:#fdfcf8;
   --paper-2:#f7f9fc;
   --dot:#cfdeeb;
@@ -45,10 +64,92 @@
   --r:16px;
   --maxw:1120px;
   --ease:cubic-bezier(.22,.9,.28,1);
+  /* page turns that overlap each other need a curve that doesn't brake hard at
+     the end — --ease is a strong ease-out, which reads as each page stopping
+     dead before the next starts. This one keeps a little momentum through the
+     finish so a riffle looks like one continuous fan. */
+  /* Page-turn curve. Balanced on purpose: the old --ease
+     (cubic-bezier(.22,.9,.28,1)) reached 90deg at just 13.6% of its duration
+     and then crawled through the remaining 3% of motion for the rest of the
+     turn, which is what made the arrived page sit there doing nothing. This
+     one crosses 90deg at 38% (see POP_AT in script.js) and settles cleanly. */
+  --ease-flip:cubic-bezier(.45,.05,.25,1);
+}
+
+/* ---------- tokens : midday (bright, high sun) ---------- */
+html[data-time="midday"]{
+  --paper:#fefdf9;
+  --paper-2:#f7faf9;
+  --dot:#c9dde6;
+  --edge:#d8e6ee;
+
+  --ink:#16324b;
+  --ink-2:#3c5c78;
+  --ink-3:#7993a8;
+
+  --blue:#2a76b0;
+  --blue-deep:#154270;
+  --blue-soft:#9cc8ea;
+  --blue-pale:#dcedf9;
+
+  --blush:#f0a9b8;
+  --gold:#f5d68f;
+  --mint:#aee0d2;
+
+  --sky-1:#2f88c9;
+  --sky-2:#5fabdd;
+  --sky-3:#a8d3ee;
+  --sky-4:#eaf4fb;
+
+  --tape:rgba(120,185,230,.42);
+  --tape-2:rgba(245,214,143,.46);
+
+  --shadow:0 10px 28px -18px rgba(21,58,90,.60), 0 2px 6px -3px rgba(21,58,90,.22);
+  --shadow-lg:0 26px 50px -28px rgba(21,58,90,.64), 0 4px 12px -6px rgba(21,58,90,.24);
+
+  --star-op:.08;
+  --cloud-op:.92;
+  --moon-op:0;
+}
+
+/* ---------- tokens : dusk (warm sunset) ---------- */
+html[data-time="dusk"]{
+  --paper:#fbf1e6;
+  --paper-2:#f7e9da;
+  --dot:#e3c9b3;
+  --edge:#ecd7c2;
+
+  --ink:#2c2438;
+  --ink-2:#5c4a5f;
+  --ink-3:#8b7488;
+
+  --blue:#5d6fa0;
+  --blue-deep:#3d4a78;
+  --blue-soft:#b6a8d0;
+  --blue-pale:#f0e2ee;
+
+  --blush:#e8899c;
+  --gold:#e8a25e;
+  --mint:#8fbfae;
+
+  --sky-1:#3a3564;
+  --sky-2:#7a4f72;
+  --sky-3:#c97a72;
+  --sky-4:#f4b483;
+
+  --tape:rgba(220,150,170,.30);
+  --tape-2:rgba(232,162,94,.34);
+
+  --shadow:0 10px 28px -18px rgba(30,15,35,.65), 0 2px 6px -3px rgba(30,15,35,.30);
+  --shadow-lg:0 26px 50px -28px rgba(30,15,35,.72), 0 4px 12px -6px rgba(30,15,35,.32);
+
+  --star-op:.55;
+  --cloud-op:.45;
+  --moon-op:.5;
 }
 
 /* ---------- tokens : night ---------- */
-html[data-sky="night"]{
+html[data-time="night"]{
   --paper:#15243b;
   --paper-2:#182b45;
   --dot:#2b415d;
@@ -153,7 +254,7 @@ sup{font-size:.7em}
 /* clouds */
 .clouds{position:absolute;inset:0;opacity:var(--cloud-op);transition:opacity 1s var(--ease)}
 .cloud{position:absolute;fill:#fff;will-change:transform}
-html[data-sky="night"] .cloud{fill:#9fb6d4}
+html[data-time="night"] .cloud{fill:#9fb6d4}
 .cloud--1{top:6vh;  left:-6vw;  width:34vw; min-width:230px; opacity:.92; animation:drift 62s linear infinite}
 .cloud--2{top:24vh; left:62vw;  width:26vw; min-width:180px; opacity:.7;  animation:drift 84s linear infinite reverse}
 .cloud--3{top:48vh; left:8vw;   width:20vw; min-width:150px; opacity:.55; animation:drift 96s linear infinite}
@@ -206,27 +307,8 @@ html[data-sky="night"] .cloud{fill:#9fb6d4}
 .tab i{font-family:var(--f-mono);font-style:normal;font-size:.68rem;opacity:.55}
 .tab:hover{color:var(--ink);background:color-mix(in srgb,var(--blue-pale) 70%,transparent);transform:translateY(-1px)}
 .tab.is-active{color:#fff;background:var(--blue)}
-html[data-sky="night"] .tab.is-active{color:#0d1a2c}
+html[data-time="night"] .tab.is-active{color:#0d1a2c}
 .tab.is-active i{opacity:.8}
-
-.daynight{
-  flex:none;width:58px;height:30px;border-radius:999px;position:relative;
-  background:linear-gradient(90deg,var(--blue-soft),var(--blue-pale));
-  border:1.5px solid var(--edge);transition:background .5s var(--ease);
-}
-html[data-sky="night"] .daynight{background:linear-gradient(90deg,#1b2c47,#38537a)}
-.daynight__knob{
-  position:absolute;top:2px;left:2px;width:23px;height:23px;border-radius:50%;
-  background:var(--paper);box-shadow:0 2px 6px rgba(15,45,75,.35);
-  display:grid;place-items:center;font-size:.8rem;
-  transition:transform .45s var(--ease);
-}
-html[data-sky="night"] .daynight__knob{transform:translateX(27px)}
-.daynight__sun,.daynight__moon{grid-area:1/1;transition:opacity .3s var(--ease),transform .45s var(--ease)}
-.daynight__sun{color:#e0a33c}
-.daynight__moon{color:var(--blue);opacity:0;transform:rotate(-90deg)}
-html[data-sky="night"] .daynight__sun{opacity:0;transform:rotate(90deg)}
-html[data-sky="night"] .daynight__moon{opacity:1;transform:none}
 
 /* ============================================================
    shared paper / decoration primitives
@@ -269,8 +351,8 @@ html[data-sky="night"] .daynight__moon{opacity:1;transform:none}
 
 /* pressed on as the page settles */
 .reveal.is-in .tape{
-  animation:tapeOn .62s var(--ease) both;
-  animation-delay:calc(var(--d,0ms) + 240ms);
+  animation:tapeOn .41s var(--ease) both;
+  animation-delay:calc(var(--d,0ms) + 160ms);
 }
 @keyframes tapeOn{
   0%  {opacity:0;transform:translateX(var(--tx)) rotate(calc(var(--rot) + 15deg)) scaleX(.04) scaleY(1.5)}
@@ -304,7 +386,7 @@ html[data-sky="night"] .daynight__moon{opacity:1;transform:none}
   font-family:var(--f-hand);font-size:1.18rem;letter-spacing:.01em;
   background:none;border:0;padding:0;color:var(--ink-2);
 }
-html[data-sky="night"] .stamp--sm{color:var(--ink-2)}
+html[data-time="night"] .stamp--sm{color:var(--ink-2)}
 
 .margin-note{
   position:relative;margin-top:1.1em;padding-left:46px;
@@ -322,7 +404,7 @@ html[data-sky="night"] .stamp--sm{color:var(--ink-2)}
   transition:transform .2s var(--ease),box-shadow .25s var(--ease),background .25s var(--ease);
 }
 .btn--solid{background:var(--blue);color:#fff;box-shadow:0 8px 18px -10px var(--blue)}
-html[data-sky="night"] .btn--solid{color:#0d1a2c}
+html[data-time="night"] .btn--solid{color:#0d1a2c}
 .btn--solid:hover{transform:translateY(-2px);box-shadow:0 14px 26px -12px var(--blue)}
 .btn--ghost{border:1.8px solid var(--blue);color:var(--blue);background:transparent}
 .btn--ghost:hover{background:var(--blue-pale);transform:translateY(-2px)}
@@ -345,23 +427,23 @@ html[data-sky="night"] .btn--solid{color:#0d1a2c}
   max-width:100%;
 }
 .hero__eyebrow span{opacity:.5;margin:0 .35em}
-html[data-sky="night"] .hero__eyebrow{color:var(--ink-2)}
+html[data-time="night"] .hero__eyebrow{color:var(--ink-2)}
 
 .hero__name{
   font-size:clamp(2.5rem,8.5vw,4.6rem);font-weight:800;line-height:1.02;
   color:var(--ink);letter-spacing:-.03em;margin-bottom:.14em;
   text-shadow:0 2px 20px rgba(255,255,255,.35);
 }
-html[data-sky="night"] .hero__name{text-shadow:0 2px 26px rgba(120,180,235,.25)}
+html[data-time="night"] .hero__name{text-shadow:0 2px 26px rgba(120,180,235,.25)}
 .hero__nick{font-family:var(--f-hand);font-size:1.22em;font-weight:700;color:var(--blue-deep);letter-spacing:0}
-html[data-sky="night"] .hero__nick{color:var(--blue)}
+html[data-time="night"] .hero__nick{color:var(--blue)}
 .hero__paren{color:var(--blue-soft);font-weight:400}
 
 .hero__scribble{
   font-family:var(--f-hand);font-size:clamp(1.4rem,3.6vw,2rem);
   color:var(--blue-deep);margin-bottom:.6em;
 }
-html[data-sky="night"] .hero__scribble{color:var(--blue)}
+html[data-time="night"] .hero__scribble{color:var(--blue)}
 
 .hero__blurb{
   max-width:min(48ch,100%);font-size:1.02rem;color:var(--ink);
@@ -370,7 +452,7 @@ html[data-sky="night"] .hero__scribble{color:var(--blue)}
   border-radius:14px;padding:14px 16px;border:1px solid var(--edge);
 }
 .hero__blurb b{color:var(--blue-deep)}
-html[data-sky="night"] .hero__blurb b{color:var(--blue)}
+html[data-time="night"] .hero__blurb b{color:var(--blue)}
 
 .hero__cta{display:flex;flex-wrap:wrap;gap:12px;margin:20px 0 22px}
 
@@ -391,7 +473,7 @@ html[data-sky="night"] .hero__blurb b{color:var(--blue)}
   background:#fff;padding:14px 14px 0;border-radius:6px;
   box-shadow:var(--shadow-lg);border:1px solid rgba(0,0,0,.05);
 }
-html[data-sky="night"] .polaroid--hero{background:#e9eef5}
+html[data-time="night"] .polaroid--hero{background:#e9eef5}
 .polaroid__img{width:100%;height:100%;object-fit:cover}
 .polaroid__art{position:absolute;inset:0;display:none}
 .polaroid__frame.is-empty .polaroid__art{display:block}
@@ -415,7 +497,7 @@ html[data-sky="night"] .polaroid--hero{background:#e9eef5}
   font-family:var(--f-hand);font-size:1.85rem;color:var(--blue-deep);
   text-align:center;margin-bottom:.35em;
 }
-html[data-sky="night"] .indexcard__h{color:var(--blue)}
+html[data-time="night"] .indexcard__h{color:var(--blue)}
 .indexcard__list{counter-reset:none}
 .indexcard__list a{
   display:flex;align-items:baseline;gap:8px;
@@ -440,9 +522,27 @@ html[data-sky="night"] .indexcard__h{color:var(--blue)}
   font-family:var(--f-hand);font-size:1.2rem;color:var(--blue-deep);
   animation:bob 2.6s ease-in-out infinite;
 }
-html[data-sky="night"] .hero__scrolltip{color:var(--blue)}
+html[data-time="night"] .hero__scrolltip{color:var(--blue)}
 .hero__scrolltip svg{width:30px;height:44px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;opacity:.8}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(9px)}}
+
+/* nav hint: how-to-flip tip tucked in the corner, out of the way of the
+   scrolltip above the "next" button. Only meaningful in book mode (arrow
+   keys / corner-drag don't apply to the plain scrolling fallback). */
+.hero__navhint{
+  display:none;
+  margin-top:14px;text-align:right;
+  margin-left:auto;
+  margin-right:3px;
+  font-family:var(--f-hand);font-size:.95rem;color:var(--ink-3);
+}
+html.book-active .hero__navhint{display:block}
+html[data-time="night"] .hero__navhint{color:var(--ink-2)}
+.hero__navhint kbd{
+  display:inline-block;font-family:var(--f-mono);font-size:.72em;font-style:normal;
+  padding:1px 6px;border-radius:5px;margin:0 1px;
+  background:var(--paper-2);border:1px solid var(--edge);box-shadow:0 1px 0 var(--edge);
+}
 
 /* ============================================================
    spreads
@@ -454,7 +554,7 @@ html[data-sky="night"] .hero__scrolltip{color:var(--blue)}
   color:#fff;background:var(--blue);padding:5px 11px;border-radius:8px;
   box-shadow:0 6px 14px -8px var(--blue);
 }
-html[data-sky="night"] .spread__num{color:#0d1a2c}
+html[data-time="night"] .spread__num{color:#0d1a2c}
 .spread__title{
   position:relative;font-family:var(--f-hand);font-weight:700;letter-spacing:0;
   font-size:clamp(2.4rem,7vw,3.6rem);line-height:1;color:var(--ink);
@@ -511,7 +611,7 @@ html[data-sky="night"] .spread__num{color:#0d1a2c}
   color:var(--blue-deep);
   padding-left:15px;text-indent:-15px;   /* wrapped lines sit indented */
 }
-html[data-sky="night"] .journey__stop{color:var(--blue)}
+html[data-time="night"] .journey__stop{color:var(--blue)}
 
 .journey__hop{flex:0 0 48px;position:relative;height:20px}
 .journey__hop::before{
@@ -532,12 +632,11 @@ html[data-sky="night"] .journey__stop{color:var(--blue)}
 }
 
 .lead{font-size:1.12rem;font-weight:600;color:var(--blue-deep);margin-bottom:.8em}
-html[data-sky="night"] .lead{color:var(--blue)}
+html[data-time="night"] .lead{color:var(--blue)}
 .paper--wide{--tilt:-.5deg}
 .paper--check{--tilt:1deg}
 .paper--edu{--tilt:-.7deg}
 .paper--kit{--tilt:.8deg}
-.paper--now{--tilt:-1deg}
 
 /* bujo checkbox list */
 .bujo li{
@@ -589,15 +688,6 @@ html[data-sky="night"] .lead{color:var(--blue)}
 .kit--terms dt{margin-top:12px;color:var(--blue-deep);font-size:.75rem}
 .kit--terms dd{font-size:.88rem}
 
-/* tracker */
-.tracker{display:grid;gap:9px;margin-bottom:14px}
-.tracker li{display:flex;align-items:flex-start;gap:11px;font-size:.94rem}
-.dot{
-  flex:none;width:13px;height:13px;border-radius:50%;margin-top:5px;
-  border:2px solid var(--blue-soft);background:transparent;
-}
-.dot--fill{background:var(--blue);border-color:var(--blue)}
-.dot--half{background:linear-gradient(90deg,var(--blue) 50%,transparent 50%);border-color:var(--blue)}
 .teach{
   font-size:.88rem;color:var(--ink-2);
   border-left:3px solid var(--gold);padding-left:12px;
@@ -627,10 +717,10 @@ html[data-sky="night"] .lead{color:var(--blue)}
 @keyframes eePulse{to{stroke-dashoffset:0}}
 
 .ee-part{stroke:var(--blue-deep);stroke-width:2.6;stroke-linecap:round;fill:none}
-html[data-sky="night"] .ee-part{stroke:var(--blue)}
+html[data-time="night"] .ee-part{stroke:var(--blue)}
 .ee-part--arc{stroke-width:2.2;opacity:.6}
 .ee-fill{fill:var(--blue-deep)}
-html[data-sky="night"] .ee-fill{fill:var(--blue)}
+html[data-time="night"] .ee-fill{fill:var(--blue)}
 .ee-mask{fill:var(--paper)}      /* breaks the wire between the capacitor plates */
 
 .ee-pad{
@@ -655,7 +745,7 @@ html[data-sky="night"] .ee-fill{fill:var(--blue)}
 @media (max-width:400px){.btnrow .btn{font-size:.72rem;padding:7px 4px}}
 
 .parody__lead{font-size:1rem;font-weight:600;color:var(--blue-deep);margin-bottom:.7em}
-html[data-sky="night"] .parody__lead{color:var(--blue)}
+html[data-time="night"] .parody__lead{color:var(--blue)}
 .parody__body{font-size:.9rem;color:var(--ink-2);margin-bottom:1em}
 .parody__body b{color:var(--ink)}
 .linkrow--tight{margin-bottom:0}
@@ -668,7 +758,7 @@ html[data-sky="night"] .parody__lead{color:var(--blue)}
   transition:padding-left .25s var(--ease),color .25s var(--ease);
 }
 .tracklist li:hover{padding-left:6px;color:var(--blue-deep)}
-html[data-sky="night"] .tracklist li:hover{color:var(--blue)}
+html[data-time="night"] .tracklist li:hover{color:var(--blue)}
 .tracklist__n{font-family:var(--f-mono);font-size:.7rem;color:var(--ink-3);flex:none}
 .tracklist__t{
   font-weight:700;flex:1;text-decoration:none;color:inherit;
@@ -695,7 +785,7 @@ html[data-sky="night"] .tracklist li:hover{color:var(--blue)}
 }
 .score__top:hover .score__name{color:var(--blue)}
 .score__top:hover .chev{background:var(--blue);color:#fff}
-html[data-sky="night"] .score__top:hover .chev{color:#0d1a2c}
+html[data-time="night"] .score__top:hover .chev{color:#0d1a2c}
 .score.is-open .chev{transform:rotate(135deg)}
 .score__body{
   display:grid;grid-template-rows:0fr;overflow:hidden;
@@ -717,14 +807,14 @@ html[data-sky="night"] .score__top:hover .chev{color:#0d1a2c}
   padding:5px 12px 5px 6px;border-radius:999px;
   transition:transform .2s var(--ease),background .2s var(--ease),color .2s var(--ease);
 }
-html[data-sky="night"] .itch{color:var(--blue)}
+html[data-time="night"] .itch{color:var(--blue)}
 .itch__tag{
   font-family:var(--f-mono);font-size:.62rem;letter-spacing:.04em;
   background:#fa5c5c;color:#fff;padding:3px 7px;border-radius:999px;
 }
 .itch:hover{transform:translateY(-2px);background:var(--blue);color:#fff}
 .score__links{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:4px}
-html[data-sky="night"] .itch:hover{color:#0d1a2c}
+html[data-time="night"] .itch:hover{color:#0d1a2c}
 
 .demos li{
   padding:8px 0 8px 20px;position:relative;font-size:.92rem;color:var(--ink-2);
@@ -743,7 +833,7 @@ html[data-sky="night"] .itch:hover{color:#0d1a2c}
   box-shadow:0 6px 14px -8px var(--blue);
   transition:transform .2s var(--ease),background .2s var(--ease),opacity .2s var(--ease);
 }
-html[data-sky="night"] .demo__play{color:#0d1a2c}
+html[data-time="night"] .demo__play{color:#0d1a2c}
 .demo__play:hover{transform:scale(1.08)}
 .demo__play:active{transform:scale(.94)}
 .demo__ico{grid-area:1/1;width:16px;height:16px;fill:currentColor;transition:opacity .18s var(--ease)}
@@ -776,7 +866,7 @@ html[data-sky="night"] .demo__play{color:#0d1a2c}
 .stat{display:flex;gap:22px;margin-bottom:16px}
 .stat div{display:grid}
 .stat b{font-size:1.7rem;font-family:var(--f-hand);color:var(--blue-deep);line-height:1}
-html[data-sky="night"] .stat b{color:var(--blue)}
+html[data-time="night"] .stat b{color:var(--blue)}
 .stat span{font-family:var(--f-mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
 
 .linkrow{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
@@ -787,16 +877,16 @@ html[data-sky="night"] .stat b{color:var(--blue)}
   border:1px solid color-mix(in srgb,var(--blue) 22%,transparent);
   transition:transform .2s var(--ease),background .2s var(--ease),color .2s var(--ease);
 }
-html[data-sky="night"] .chip{color:var(--blue)}
+html[data-time="night"] .chip{color:var(--blue)}
 .chip em{font-style:normal;font-weight:500;font-family:var(--f-mono);font-size:.7rem;opacity:.75}
 .chip:hover{transform:translateY(-2px) rotate(-1deg);background:var(--blue);color:#fff}
-html[data-sky="night"] .chip:hover{color:#0d1a2c}
+html[data-time="night"] .chip:hover{color:#0d1a2c}
 .chip:hover em{opacity:.9}
 .quote{
   font-family:var(--f-hand);font-size:1.28rem;color:var(--blue-deep);
   border-left:3px solid var(--blush);padding-left:12px;margin:0;
 }
-html[data-sky="night"] .quote{color:var(--blue)}
+html[data-time="night"] .quote{color:var(--blue)}
 
 /* ---------- research ---------- */
 .paper--lab{--tilt:-.5deg}
@@ -820,7 +910,7 @@ html[data-sky="night"] .quote{color:var(--blue)}
   font-family:var(--f-hand);font-size:1.2rem;font-weight:600;
   letter-spacing:0;color:var(--blue);
 }
-html[data-sky="night"] .proj__sub{color:var(--blue-deep)}
+html[data-time="night"] .proj__sub{color:var(--blue-deep)}
 
 /* ── fig. 1 · the HRTF measurement grid ───────────────────────────── */
 .hrtf{display:block;width:100%;max-width:290px;margin:2px auto 12px;height:auto}
@@ -850,11 +940,11 @@ html[data-sky="night"] .proj__sub{color:var(--blue-deep)}
 @keyframes hrtfPulse{0%,100%{r:3.2;opacity:.85}50%{r:4.6;opacity:1}}
 
 .hrtf__head circle{fill:color-mix(in srgb,var(--blue-pale) 80%,var(--paper));stroke:var(--blue-deep);stroke-width:1.6}
-html[data-sky="night"] .hrtf__head circle{stroke:var(--blue)}
+html[data-time="night"] .hrtf__head circle{stroke:var(--blue)}
 .hrtf__nose{fill:var(--blue-deep)}
-html[data-sky="night"] .hrtf__nose{fill:var(--blue)}
+html[data-time="night"] .hrtf__nose{fill:var(--blue)}
 .hrtf__ear{fill:none;stroke:var(--blue-deep);stroke-width:1.5}
-html[data-sky="night"] .hrtf__ear{stroke:var(--blue)}
+html[data-time="night"] .hrtf__ear{stroke:var(--blue)}
 
 .fig__cap{
   font-size:.8rem;line-height:1.55;color:var(--ink-2);margin:0;
@@ -870,12 +960,12 @@ html[data-sky="night"] .hrtf__ear{stroke:var(--blue)}
 
 /* ── adaptive soundbeaming ────────────────────────────────────────── */
 .beam__title{margin:.1em 0 .5em;color:var(--blue-deep)}
-html[data-sky="night"] .beam__title{color:var(--blue)}
+html[data-time="night"] .beam__title{color:var(--blue)}
 .beam__body{font-size:.9rem;color:var(--ink-2);margin:0}
 
 .beam{display:block;width:100%;max-width:260px;height:auto;margin:10px auto 0;justify-self:center}
 .beam__array rect{fill:var(--blue-deep);opacity:.9}
-html[data-sky="night"] .beam__array rect{fill:var(--blue)}
+html[data-time="night"] .beam__array rect{fill:var(--blue)}
 .beam__array circle{fill:var(--paper);opacity:.85}
 
 .beam__cone{transform-box:view-box;transform-origin:40px 75px;animation:steer 7s ease-in-out infinite}
@@ -935,7 +1025,7 @@ html[data-sky="night"] .beam__array rect{fill:var(--blue)}
   padding:3px 8px;border-radius:6px;color:var(--blue-deep);
   background:var(--blue-pale);border:1px solid color-mix(in srgb,var(--blue) 18%,transparent);
 }
-html[data-sky="night"] .tags li{color:var(--blue)}
+html[data-time="night"] .tags li{color:var(--blue)}
 .card__link{
   display:inline-block;align-self:flex-start;
   font-weight:800;font-size:.86rem;text-decoration:none;
@@ -950,7 +1040,7 @@ html[data-sky="night"] .tags li{color:var(--blue)}
 .th-axis{stroke:#fff;stroke-width:1.4;stroke-dasharray:2 5;opacity:.55}
 
 .th-sensor{fill:var(--blue-deep)}
-html[data-sky="night"] .th-sensor{fill:#0f1e33}
+html[data-time="night"] .th-sensor{fill:#0f1e33}
 .th-sensor--a{transform:translate(70px,93px)}
 .th-sensor--b{transform:translate(170px,93px)}
 .th-lens{fill:var(--blush)}
@@ -1024,7 +1114,7 @@ html[data-sky="night"] .th-sensor{fill:#0f1e33}
 .vo-knob--r{transform:translate(217px,50px)}
 .vo-arc{fill:none;stroke:#fff;stroke-width:3.4;stroke-linecap:round;opacity:.55}
 .vo-cap-c{fill:var(--blue-deep);opacity:.55}
-html[data-sky="night"] .vo-cap-c{fill:#0f1e33;opacity:.7}
+html[data-time="night"] .vo-cap-c{fill:#0f1e33;opacity:.7}
 .vo-point{stroke:#fff;stroke-width:2;stroke-linecap:round;opacity:.9}
 
 /* card art: whoosh — the curve editor panel */
@@ -1078,7 +1168,7 @@ html[data-sky="night"] .vo-cap-c{fill:#0f1e33;opacity:.7}
 .mailbtn:hover{transform:translateY(-2px);background:color-mix(in srgb,var(--blue-pale) 70%,var(--blue) 12%)}
 .mailbtn:active{transform:scale(.985)}
 .mailbtn__label{display:block;font-weight:800;font-size:1rem;color:var(--blue-deep);word-break:break-all}
-html[data-sky="night"] .mailbtn__label{color:var(--blue)}
+html[data-time="night"] .mailbtn__label{color:var(--blue)}
 .mailbtn__hint{display:block;font-family:var(--f-mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-top:3px}
 .mailbtn.is-copied .mailbtn__hint::after{content:" ✓ copied!";color:var(--blue)}
 
@@ -1129,7 +1219,7 @@ html[data-sky="night"] .mailbtn__label{color:var(--blue)}
   position:absolute;left:2%;right:2%;top:0;width:96%;height:44px;
   fill:none;stroke:var(--ink-2);stroke-width:2;opacity:.5;
 }
-html[data-sky="night"] .line__string{stroke:var(--blue-soft);opacity:.55}
+html[data-time="night"] .line__string{stroke:var(--blue-soft);opacity:.55}
 
 .line__pegs{
   position:relative;display:flex;align-items:flex-start;justify-content:space-between;
@@ -1155,8 +1245,13 @@ html[data-sky="night"] .line__string{stroke:var(--blue-soft);opacity:.55}
   display:block;background:#fff;padding:9px;border-radius:4px;
   box-shadow:var(--shadow-lg);border:1px solid rgba(0,0,0,.05);
 }
-html[data-sky="night"] .peg__frame{background:#e9eef5}
-.peg__frame img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:2px;display:block}
+html[data-time="night"] .peg__frame{background:#e9eef5}
+/* height:auto is load-bearing: the width/height attributes on these <img>
+   elements (there for layout stability) are presentational hints, and
+   without an explicit height:auto the height attribute wins as the used
+   height -- which makes both dimensions definite and silently disables
+   aspect-ratio below. */
+.peg__frame img{width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:2px;display:block}
 
 @media (max-width:640px){
   .line__pegs{flex-wrap:wrap;justify-content:center;gap:22px 14px}
@@ -1180,16 +1275,14 @@ html[data-sky="night"] .peg__frame{background:#e9eef5}
   font-family:var(--f-hand);font-size:clamp(2rem,6vw,3rem);color:var(--ink);
   margin:0;text-shadow:0 2px 18px rgba(255,255,255,.4);
 }
-html[data-sky="night"] .footer__sign{text-shadow:0 2px 22px rgba(120,180,235,.2)}
-.footer__meta{font-size:.78rem;color:var(--ink-2);margin:0}
-html[data-sky="night"] .footer__meta{color:var(--ink-3)}
+html[data-time="night"] .footer__sign{text-shadow:0 2px 22px rgba(120,180,235,.2)}
 .totop{
   margin-top:10px;padding:9px 18px;border-radius:999px;font-size:.82rem;font-weight:800;
   color:var(--blue-deep);background:color-mix(in srgb,var(--paper) 82%,transparent);
   border:1.5px solid var(--edge);box-shadow:var(--shadow);
   transition:transform .2s var(--ease);
 }
-html[data-sky="night"] .totop{color:var(--blue)}
+html[data-time="night"] .totop{color:var(--blue)}
 .totop:hover{transform:translateY(-3px)}
 
 /* toast */
@@ -1202,34 +1295,15 @@ html[data-sky="night"] .totop{color:var(--blue)}
 }
 .toast.is-on{opacity:1;transform:translate(-50%,0)}
 
-/* pages fluttering past on the way to a new section */
-.pagefly{
-  position:fixed;z-index:45;pointer-events:none;
-  aspect-ratio:3/4;border-radius:3px;
-  background-color:var(--paper);
-  background-image:repeating-linear-gradient(180deg,
-    transparent 0 5px, color-mix(in srgb,var(--dot) 65%,transparent) 5px 6px);
-  border:1px solid var(--edge);
-  box-shadow:0 8px 18px -10px rgba(20,55,90,.5);
-  opacity:0;
-  animation:pagefly var(--dur,.95s) var(--ease) var(--delay,0ms) forwards;
-}
-@keyframes pagefly{
-  0%  {opacity:0;transform:translate3d(0,0,0) rotate(0deg)}
-  14% {opacity:.92}
-  55% {transform:translate3d(calc(var(--drift,0px) * .55),calc(var(--dir,1) * 58vh),0)
-       rotate(calc(var(--rot,20deg) * .6))}
-  100%{opacity:0;transform:translate3d(var(--drift,0px),calc(var(--dir,1) * 122vh),0)
-       rotate(var(--rot,20deg))}
-}
-
 /* sparkles (cursor trail + click bursts) */
 .spark{
   position:fixed;width:9px;height:9px;pointer-events:none;z-index:70;
-  background:var(--blush);opacity:.9;
+  background:var(--blush);opacity:0;
   clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);
-  animation:sparkOut .78s var(--ease) forwards;
 }
+/* pooled and recycled (see spark() in script.js) — the animation is carried
+   by this class so removing/re-adding it restarts the particle */
+.spark--on{animation:sparkOut .78s var(--ease) forwards}
 @keyframes sparkOut{
   0%{transform:translate(-50%,-50%) scale(.2) rotate(0deg);opacity:.95}
   100%{transform:translate(-50%,-50%) translate(var(--dx,0),var(--dy,14px)) scale(1.15) rotate(150deg);opacity:0}
@@ -1240,11 +1314,388 @@ html[data-sky="night"] .totop{color:var(--blue)}
    ============================================================ */
 .reveal{
   opacity:0;
-  transform:translateY(26px) rotate(var(--tilt,0deg)) scale(.988);
-  transition:opacity .72s var(--ease),transform .72s var(--ease);
+  transform-origin:50% 100%;
+  transform:translateY(18px) translateZ(-60px) rotateX(-62deg) rotate(var(--tilt,0deg)) scale(.92);
+  transition:opacity .33s var(--ease),transform .45s cubic-bezier(.34,1.56,.64,1);
   transition-delay:var(--d,0ms);
 }
-.reveal.is-in{opacity:1;transform:translateY(0) rotate(var(--tilt,0deg)) scale(1)}
+
+/* While a leaf is being re-primed for its next pop-up, its reveals must snap
+   straight back to the hidden resting state above. .reveal is a *transition*,
+   not a one-way animation, so a plain `is-in` removal would otherwise play the
+   whole pop-up backwards — a visible fade-out — on a page that is about to
+   come into view partway through a flip. primeLeaf() adds this class, strips
+   the classes, flushes, and removes it again. */
+html.book-active .leaf.is-priming .reveal,
+html.book-active .leaf.is-priming .deco{transition:none}
+.reveal.is-in{
+  opacity:1;
+  transform:translateY(0) translateZ(0) rotateX(0deg) rotate(var(--tilt,0deg)) scale(1);
+}
+
+/* ============================================================
+   book : 3D page-flip stage
+   only active once script.js confirms it can run (html.book-active) —
+   otherwise the site stays a normal scrolling document.
+   ============================================================ */
+html.book-active body{
+  display:flex;flex-direction:column;
+  height:100vh;overflow:hidden;
+}
+html.book-active .topbar{flex:none}
+
+html.book-active .book{
+  position:relative;flex:1 1 auto;min-height:0;
+  max-width:min(1780px, calc(100vw - 32px));width:100%;margin:0 auto;
+  padding:0 14px clamp(10px,2vw,18px);
+}
+/* see the inline boot script in index.html <head> */
+html.book-booting .book__stage{visibility:hidden}
+
+html.book-active .book__stage{
+  position:relative;width:100%;height:100%;
+  /* perspective WITHOUT transform-style:preserve-3d, deliberately.
+     preserve-3d would put all 8 leaves in one shared 3D rendering context,
+     where children are sorted by their position in 3D space and z-index
+     stops being the authoritative tiebreaker. Every un-turned leaf sits at
+     rotateY(0deg) — exactly coplanar at z=0 — so that sort is degenerate,
+     and Chrome resolved it differently from frame to frame: a random other
+     page would flash on top for an instant on almost every navigation.
+     perspective alone still projects each leaf's own rotateY (that's
+     independent of transform-style), and the leaves never need to intersect
+     one another — they're a flat stack that turns one at a time — so the
+     flip looks identical while painting order becomes deterministic. */
+  perspective:2400px;
+}
+
+html.book-active .leaf{
+  position:absolute;inset:0;
+  /* .hero/.spread/.line each carry their own max-width:var(--maxw);margin:0 auto
+     from the pre-book single-column layout — override it here so a leaf fills
+     the full width .book gives it (the book fills the screen on any display).
+     The 2-column pages (hero, research, contact) get their own narrower cap
+     below instead, since capping the leaf itself just moves the dead gap
+     from "around the book" to "around the leaf" without fixing it. */
+  max-width:none;margin:0;
+  /* no transform-style here either: it computed to `flat` regardless,
+     because overflow:hidden and contain:paint below both force that. */
+  transform-origin:0% 50%;
+  backface-visibility:hidden;transform:rotateY(0deg);
+  /* The transform leg is rewritten inline per flip (duration/easing/delay all
+     vary per leaf per turn); the palette legs are never touched by JS, so a
+     leaf's colours always ease over .8s no matter how fast it happens to be
+     turning. Roughly matches .paper's own .5s and the sky's 1.1s, so the whole
+     page changes palette as one instead of the background snapping ahead of
+     its own contents. */
+  transition:transform .65s var(--ease-flip),
+             background-color .8s var(--ease),
+             border-color .8s var(--ease);
+  background:var(--paper);border:1.5px solid var(--edge);
+  border-radius:var(--r);box-shadow:var(--shadow-lg);
+  overflow:hidden;
+  /* a style change inside one page (reveals popping in, the resume iframe
+     loading) shouldn't force layout/paint on the seven other stacked leaves */
+  contain:layout paint;
+}
+/* Exactly one leaf ever turns, so promoting it for the duration of the turn
+   is one layer, not eight. This also removes the promote/demote churn on
+   every flip, which is what kept prodding the compositor into re-sorting. */
+html.book-active .leaf.is-turning{will-change:transform}
+
+/* Leaves that can't legitimately be on screen are not merely stacked behind
+   the others — they're taken out of painting altogether, so no compositor
+   quirk can surface one. visibility (not display) keeps them in layout, so
+   activateLeaf()'s synchronous getBoundingClientRect() reads and
+   primeLeaf()'s offsetHeight flush still work. Driven from JS: layout() sets
+   the resting state, animate()/flipToCover()/dragStart() widen it to the two
+   leaves a turn actually involves. */
+
+/* a drag follows the pointer frame by frame — suppress only the transform
+   leg, so the palette keeps easing normally underneath it */
+html.book-active .leaf.is-dragging{
+  transition:background-color .8s var(--ease),border-color .8s var(--ease);
+}
+
+/* every page's content shares one consistent max-width, centered, so the
+   left/right margin reads the same on every page regardless of how many
+   columns that page's grid happens to use — .grid covers every grid--*
+   variant (about/research/projects/music/contact all use it) in one rule. */
+html.book-active .hero__inner,
+html.book-active .spread__head,
+html.book-active .spread__intro,
+html.book-active .grid,
+html.book-active .line__h,
+html.book-active .line__wrap{
+  max-width:1400px;margin-left:auto;margin-right:auto;
+}
+html.book-active .leaf__scroll{
+  position:absolute;inset:0;overflow:hidden;
+  perspective:1600px;
+}
+/* Below the guaranteed-fit floor (phone landscape, roughly) the fluid scale
+   above has run out of room, and shrinking further would cross into
+   unreadable. Allow scrolling there rather than silently clipping the bottom
+   of the page off — losing content is worse than a scrollbar. */
+@media (max-height:480px){
+  html.book-active .leaf__scroll{overflow-y:auto;-webkit-overflow-scrolling:touch}
+}
+
+/* tighter vertical rhythm inside the book, where a page's height is capped by
+   the viewport — the no-JS/normal-scroll fallback keeps the original, more
+   generous spacing since it has no such constraint. Font sizes are untouched
+   (readability/accessibility); only padding/gaps/line-height shrink. */
+/* ------------------------------------------------------------------
+   FIT MODEL — every page is exactly one screen, at every size.
+
+   The rule throughout this block is: any size that consumes VERTICAL room
+   is expressed as min(<width-derived>, <height-derived>), wrapped in a
+   clamp for its floor and ceiling:
+
+       clamp(<min>, min(<X>vw, <Y>vh), <max>)
+
+   min() picks whichever of the two is smaller, so a wide-but-short window
+   (a laptop at 1440x800, a tablet in landscape) is driven by its HEIGHT
+   rather than being handed desktop-sized spacing it has no room for. That
+   was the actual bug: this block was almost entirely vw-driven, so short
+   viewports kept full-height padding and pushed content off the page.
+
+   Guaranteed to fit from 480px tall upward; below that .leaf__scroll is
+   allowed to scroll rather than clip (see the floor rule further down).
+   ------------------------------------------------------------------ */
+html.book-active body{
+  line-height:1.44;
+  /* body copy stays width-driven (that's what governs comfortable line
+     length) but gains a height term so short viewports get a modest,
+     still-legible reduction instead of overflowing */
+  font-size:clamp(13.5px,min(.55vw + 13.6px,2.05vh),16.5px);
+}
+html.book-active .hero{padding:clamp(10px,min(3vw,2.6vh),32px) 20px clamp(12px,min(3vw,2.6vh),32px)}
+html.book-active .hero__inner{gap:clamp(10px,min(2.4vw,2.4vh),26px)}
+html.book-active .spread{padding:clamp(6px,min(1.2vw,1.2vh),14px) 20px clamp(12px,min(2.6vw,2.4vh),30px)}
+/* vh-based (not vw) because what actually constrains this is available
+   vertical room, not viewport width — a wide-but-short window shouldn't
+   get the same generous gap as a tall one just because it's wide. */
+html.book-active .spread__head{margin-bottom:clamp(10px,3.2vh,38px);gap:min(10px,1.2vh)}
+html.book-active .spread__intro{margin-bottom:clamp(6px,min(1.8vw,1.6vh),18px)}
+html.book-active .grid,
+html.book-active .research__col{gap:clamp(5px,min(.7vw,1vh),10px)}
+html.book-active .line{padding:clamp(16px,4vh,44px) 20px clamp(20px,3vw,32px)}
+html.book-active .line__h{margin-bottom:clamp(16px,4vh,38px)}
+html.book-active .line__wrap{padding-top:8px}
+/* On short viewports the cover's two helper hints are the cheapest things to
+   give up: the scroll tip is actively misleading now that pages don't
+   scroll, and the nav hint duplicates the visible prev/next controls. */
+@media (max-height:760px){
+  html.book-active .hero__scrolltip,
+  html.book-active .hero__navhint{display:none}
+}
+/* The crochet leaf centres its POLAROID ROW on the page, not its content
+   block. Its three in-flow children are the heading, the polaroid row, and
+   the footer (the deco layer is position:absolute, so it sits outside this).
+   A 1fr/auto/1fr grid gives the two outer rows an identical share of the
+   free space, which puts the middle row — the polaroids — exactly on the
+   page's vertical centre at every viewport size. The heading then hangs off
+   the bottom of row 1 and the footer off the top of row 3, so both stay
+   attached to the photos instead of drifting.
+   This is why it's a grid rather than a centred flex column: flex would
+   centre the whole heading+photos+footer stack, and since the footer is much
+   taller than the heading that would leave the polaroids sitting well above
+   centre. Here the outer rows are equal by construction, so no pixel
+   compensation is needed and it stays correct as text sizes reflow.
+   Overflow-safe: `1fr` in grid is minmax(auto,1fr), so on a short viewport
+   the outer rows shrink only to their content and nothing is clipped —
+   which is what the previous `safe flex-end` was guarding against. */
+html.book-active .line .leaf__scroll{
+  display:grid;
+  grid-template-rows:1fr auto 1fr;
+}
+html.book-active .line .line__h{align-self:end}
+html.book-active .line .footer{align-self:start}
+
+/* padding-top here is the gap between the polaroid frame and "nice to meet
+   u" below. */
+/* was clamp(55px,4vh,44px) — min > max, so it collapsed to a constant 55px
+   and the vh term never applied. Ordered correctly it now actually responds. */
+/* .peg's translateY(var(--y)) sway offset (10-24px per peg, for the
+   clothesline stagger) is a transform — it paints the polaroid lower than
+   its actual layout box, but doesn't add to that box's height, so
+   .line__wrap's own bottom edge sits ABOVE where the lowest polaroid is
+   actually drawn. .line__pegs reserves the worst case (24px, the largest
+   --y in use) so the box truly encloses every polaroid's visual extent —
+   without this, the padding below is measured from the wrong place and the
+   real gap ends up 24px smaller than intended. */
+html.book-active .line__pegs{padding-bottom:24px}
+/* Exact 40px from the lowest polaroid to "back to the cover": footer's
+   button is its only in-flow child now (the greeting lives in the corner,
+   see .line .footer__sign below), so this top padding IS that gap. Flat
+   40px rather than a clamp, per that exact request — .footer is unique to
+   this one leaf, so nothing else is affected by making it a fixed value. */
+html.book-active .footer{padding:40px 20px clamp(28px,min(6.5vw,6vh),72px)}
+html.book-active .footer__inner{gap:3px}
+html.book-active .footer__sign{font-size:clamp(1rem,min(2.6vw,2.4vh),1.5rem);margin-bottom:0}
+
+/* "nice to meet u :)" is lifted out of the centered footer stack and parked
+   in the page's lower-right corner. Absolute against .leaf__scroll (which is
+   position:relative) rather than .footer, so it's pinned to the PAGE corner
+   and not to wherever the footer block happens to end up — the crochet leaf
+   bottom-aligns its content, so the footer's own box moves with content
+   height while the corner does not.
+   The corner is free: every decoration on this leaf sits on the left
+   (left:4%/5%/8%), and the prev/next pill is centred, so nothing collides.
+   Scoped to html.book-active .line — the no-JS scrolling fallback keeps the
+   original centred footer, where there is no fixed-size page to have a
+   corner of. */
+html.book-active .line .footer__sign{
+  position:absolute;
+  right:clamp(18px,3.5vw,52px);
+  bottom:clamp(14px,2.6vh,30px);
+  margin:0;
+  text-align:right;
+  z-index:2;
+}
+html.book-active .totop{margin-top:4px;padding:7px 16px}
+html.book-active .paper,
+html.book-active .card,
+html.book-active .indexcard{padding:clamp(5px,1vh,10px) clamp(9px,1.1vw,14px)}
+
+/* the big display headings + repeated per-item spacing are the next-biggest
+   height cost on text-heavy pages (about/music) — shrink both. Body copy
+   size is left alone; these are all headings/decorative or small vertical
+   gaps between list-like items, so legibility isn't affected. */
+html.book-active .spread__title{font-size:clamp(1.15rem,min(3.6vw,4.4vh),2.05rem);padding-bottom:3px}
+html.book-active .uline{height:11px}
+html.book-active .spread__note{margin-bottom:3px}
+html.book-active .hero__name{font-size:clamp(1.5rem,min(6vw,7vh),3.1rem);margin-bottom:.06em}
+html.book-active .paper__h{font-size:clamp(.98rem,min(1.18rem,2vh),1.18rem);margin-bottom:.15em}
+html.book-active .margin-note{margin-top:.6em}
+html.book-active p{margin:0 0 .55em}
+html.book-active .journey{margin:0 0 .7em}
+html.book-active .kit dt{margin-top:4px}
+html.book-active .tracklist{margin-bottom:8px}
+html.book-active .tracklist li{padding:4px 0}
+html.book-active .score__top{padding:6px 0}
+html.book-active .demos li.demo{padding-top:6px;padding-bottom:6px}
+html.book-active .stat{margin-bottom:8px}
+/* both music pages leave a big empty gap below this full-width block since
+   the two rows above it don't fill the leaf's height — push it down into
+   that space instead of leaving it stranded right under the first row. */
+/* a plain Nvh clamp can't work here: at a 660px-tall viewport this leaf
+   (music, continued) already fits with exactly zero spare room, so any
+   flat vh push overflows it — but taller viewports have 200px+ to spare.
+   calc(50vh - 330px) is 0 right at 660px and grows from there, instead of
+   scaling from 0 at viewport height 0 like a bare vh value would. */
+html.book-active .paper--social{margin-top:clamp(0px,calc(50vh - 330px),130px)}
+html.book-active .linkrow{margin-bottom:8px}
+html.book-active .ee{margin:6px auto 0;max-width:340px}
+html.book-active .resume__pdf{height:440px}
+/* the photo+index-card column runs almost 2x taller than the text column and
+   is the dominant height cost on the cover page — shrink both. */
+html.book-active .hero__right{gap:12px}
+html.book-active .polaroid__frame{width:min(210px,50vw)}
+html.book-active .polaroid__cap{padding:5px 0 8px;font-size:1.1rem}
+html.book-active .indexcard{width:min(270px,60vw);padding:14px 16px 10px}
+html.book-active .indexcard__h{margin-bottom:.2em}
+html.book-active .indexcard__list a{padding:4px 2px}
+html.book-active .kit dd{line-height:1.32;font-size:.85rem}
+html.book-active .fig__cap{line-height:1.4}
+html.book-active .hrtf{max-width:210px;margin:2px auto 6px}
+html.book-active .bujo li{padding:3px 0 3px 30px}
+html.book-active .proj{margin:8px 0 0;padding:8px 0 0}
+html.book-active .margin-note{margin-top:.6em}
+html.book-active .margin-note--wide{padding:7px 12px 7px 34px;margin-top:.5em;font-size:.94rem}
+html.book-active .entry + .entry{margin-top:5px;padding-top:5px}
+html.book-active .entry__sub{margin:.15em 0 .3em;font-size:.85rem}
+html.book-active .entry__body{font-size:.85rem;line-height:1.35}
+html.book-active .entry__top h4,
+html.book-active .entry__top .entry__title{font-size:.98rem}
+
+html.book-active .book__corner{
+  position:absolute;top:0;bottom:0;width:12vw;max-width:96px;min-width:44px;
+  z-index:40;border:0;background:transparent;cursor:pointer;
+  touch-action:none;-webkit-tap-highlight-color:transparent;
+}
+html.book-active .book__corner--prev{left:0}
+html.book-active .book__corner--next{right:0}
+
+html.book-active .book__controls{
+  position:absolute;left:50%;bottom:14px;transform:translateX(-50%);
+  z-index:42;display:flex;align-items:center;gap:12px;
+  background:color-mix(in srgb,var(--paper) 88%,transparent);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  border:1.5px solid var(--edge);border-radius:999px;
+  padding:6px 8px 6px 14px;box-shadow:var(--shadow);
+  transition:background .5s var(--ease),border-color .5s var(--ease);
+}
+.pagebtn{
+  font-weight:800;font-size:.82rem;color:var(--blue-deep);
+  padding:7px 12px;border-radius:999px;
+  transition:background .2s var(--ease),color .2s var(--ease);
+}
+html[data-time="night"] .pagebtn{color:var(--blue)}
+.pagebtn:hover{background:var(--blue-pale)}
+.pagebtn:disabled{opacity:.35;cursor:default;pointer-events:none}
+.book__pageno{font-family:var(--f-mono);font-size:.68rem;color:var(--ink-3);letter-spacing:.04em}
+
+/* pause decorative loops on pages that aren't open, so the browser
+   isn't compositing every animated SVG in the book at once */
+html.book-active .leaf:not(.is-current) .hrtf__rotor,
+html.book-active .leaf:not(.is-current) .hrtf__target,
+html.book-active .leaf:not(.is-current) .beam__cone,
+html.book-active .leaf:not(.is-current) .beam__wave,
+html.book-active .leaf:not(.is-current) .beam__listener,
+html.book-active .leaf:not(.is-current) .vo-bar,
+html.book-active .leaf:not(.is-current) .vo-cap,
+html.book-active .leaf:not(.is-current) .wh-bar,
+html.book-active .leaf:not(.is-current) .wh-curve,
+html.book-active .leaf:not(.is-current) .wh-fill,
+html.book-active .leaf:not(.is-current) .wh-knob--drag,
+html.book-active .leaf:not(.is-current) .th-ping,
+html.book-active .leaf:not(.is-current) .th-target,
+html.book-active .leaf:not(.is-current) .th-note,
+html.book-active .leaf:not(.is-current) .ee-pulse,
+html.book-active .leaf:not(.is-current) .ee-pad,
+html.book-active .leaf:not(.is-current) .ee-note,
+html.book-active .leaf:not(.is-current) .journey .plane,
+html.book-active .leaf:not(.is-current) .peg,
+html.book-active .leaf:not(.is-current) .pa-cloud,
+html.book-active .leaf:not(.is-current) .deco-hc,
+html.book-active .leaf:not(.is-current) .deco-hc-plane,
+html.book-active .leaf:not(.is-current) .deco-hc-plane__trail,
+html.book-active .leaf:not(.is-current) .deco-conste__line,
+html.book-active .leaf:not(.is-current) .deco-conste__star,
+html.book-active .leaf:not(.is-current) .deco-clip,
+html.book-active .leaf:not(.is-current) .deco-hn__note,
+html.book-active .leaf:not(.is-current) .deco-s3__star,
+html.book-active .leaf:not(.is-current) .deco-nb__rock,
+html.book-active .leaf:not(.is-current) .deco-nb__melody,
+html.book-active .leaf:not(.is-current) .deco-nb__pen,
+html.book-active .leaf:not(.is-current) .deco-sticky--front,
+html.book-active .leaf:not(.is-current) .deco-yarn__ball,
+html.book-active .leaf:not(.is-current) .deco-yarn__thread path,
+html.book-active .leaf:not(.is-current) .deco-bin__wave path,
+html.book-active .leaf:not(.is-current) .deco-gs__star,
+html.book-active .leaf:not(.is-current) .deco-scope__wave,
+html.book-active .leaf:not(.is-current) .deco-code__caret,
+html.book-active .leaf:not(.is-current) .deco-chip__led,
+html.book-active .leaf:not(.is-current) .deco-placeholder__cursor,
+html.book-active .leaf:not(.is-current) .deco--ribbonwave,
+html.book-active .leaf:not(.is-current) .deco-rw__note,
+html.book-active .leaf:not(.is-current) .deco-clef__glyph path,
+html.book-active .leaf:not(.is-current) .deco-clef__note,
+html.book-active .leaf:not(.is-current) .deco-haha__word,
+html.book-active .leaf:not(.is-current) .deco--mic,
+html.book-active .leaf:not(.is-current) .deco-mic__waves path,
+html.book-active .leaf:not(.is-current) .deco-eq__bar,
+html.book-active .leaf:not(.is-current) .deco--dreamcloud use,
+html.book-active .leaf:not(.is-current) .deco-dc__z,
+html.book-active .leaf:not(.is-current) .deco--sleepycloud use,
+html.book-active .leaf:not(.is-current) .deco-sc__z,
+html.book-active .leaf:not(.is-current) .deco-ss__star,
+html.book-active .leaf:not(.is-current) .deco-fs__star,
+html.book-active .leaf:not(.is-current) .deco-fz__z,
+html.book-active .leaf:not(.is-current) .deco-dots__dot{
+  animation-play-state:paused;
+}
 
 /* ============================================================
    responsive
@@ -1299,15 +1750,40 @@ html[data-sky="night"] .totop{color:var(--blue)}
 @media (min-width:820px){
   .hero{padding-top:clamp(40px,6vw,80px)}
   .hero__inner{grid-template-columns:1.12fr .88fr;align-items:center}
+  /* book mode: the text and photo blocks each have their own natural/capped
+     size and don't stretch, so fr-based columns on a very wide leaf just
+     leave a dead gap between them — size the columns to content instead and
+     center the compact result, so the extra width becomes real margin. */
+  html.book-active .hero__inner{
+    grid-template-columns:minmax(0,560px) minmax(0,auto);
+    justify-content:center;
+  }
   .hero__right{justify-items:end}
   .hero__scrolltip{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);margin:0}
+  /* book mode: .book__controls (prev/pageno/next) sits fixed at the same
+     bottom-center spot, directly under this — raise it clear of that pill
+     and shift it to point at the "next" button specifically instead of
+     nothing in particular. */
+  html.book-active .hero__scrolltip{left:calc(50% + 30px);bottom:78px}
+  /* tucked in the lower-right corner, clear of the .book__corner--next drag
+     hitbox (right:0, up to 96px wide) and the bottom-center controls pill */
+  html.book-active .hero__navhint{
+    position:absolute;right:110px;bottom:20px;margin:0;
+    max-width:200px;text-align:right;font-size:.82rem;line-height:1.4;
+  }
 
   .grid--about{grid-template-columns:repeat(6,1fr);align-items:start}
   .paper--wide{grid-column:span 4}
   .paper--check{grid-column:span 2}
   .paper--edu{grid-column:span 3}
   .paper--kit{grid-column:span 3}
-  .paper--now{grid-column:span 6}
+  /* row-gap only — column-gap keeps the value the shared `.grid` rule sets,
+     so wide/check and edu/kit stay the normal distance apart. row-gap is a
+     longhand, so it overrides just that one axis of the earlier `gap`
+     shorthand without disturbing it; row 1 stays put and row 2 (edu/kit)
+     is what actually moves, since grid tracks size from the top down and a
+     bigger gap only pushes the track that comes after it. */
+  html.book-active .grid--about{row-gap:35px}
 
   .grid--music{grid-template-columns:repeat(6,1fr);align-items:start}
   .paper--releases{grid-column:span 3}
@@ -1320,7 +1796,7 @@ html[data-sky="night"] .totop{color:var(--blue)}
     align-items:center;gap:26px;
   }
   .social__row .stat{margin-bottom:0}
-  .social__row .linkrow{margin-bottom:0}
+  .social__row .linkrow{margin-bottom:0;justify-content:center}
   .social__row .quote{max-width:30ch}
 
   .grid--research{grid-template-columns:1.55fr 1fr;align-items:start}
@@ -1342,13 +1818,313 @@ html[data-sky="night"] .totop{color:var(--blue)}
 
 @media (min-width:1060px){
   .grid--projects{grid-template-columns:repeat(3,1fr)}
-  .paper--now{grid-column:span 6}
-  .tracker{grid-template-columns:repeat(2,1fr)}
 }
 
 /* card art sizing on the widest layout */
 @media (min-width:1060px){
   .card__art{height:150px}
+}
+
+
+/* ============================================================
+   page decorations — ambient sky/music/EE/craft accents that
+   fill the dead space around the papers. Self-contained loops;
+   they don't hook into the .reveal/.is-in pop-up system so they
+   keep animating steadily regardless of page-turn state, and the
+   offscreen-pause rule below (extended in its existing list)
+   stops them the instant a leaf isn't the current page.
+   Hidden below 900px, where every page is already single-column
+   and there is no dead space left to decorate.
+   ============================================================ */
+.leaf__scroll{position:relative}
+.deco-layer,.deco--clip,.deco--header,.deco-placeholder{display:none}
+
+@media (min-width:900px){
+
+.deco-layer{display:block;position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:-1}
+/* mirrors the content box (html.book-active .grid{max-width:1400px;margin:auto})
+   so left:/right: on a figure lines up with the cards' own edges, not the
+   leaf's — the leaf itself can be much wider than the content at large
+   viewports (.book caps at 1780px while .grid caps at 1400px). */
+.deco-layer__inner{position:relative;height:100%;max-width:1400px;margin:0 auto;padding:0 20px}
+.deco{pointer-events:none}
+
+/* Decorations join the page's entrance instead of sitting there permanently.
+   Animated with the INDEPENDENT transform properties (translate/scale) rather
+   than `transform`, because many decos already use `transform` for their
+   placement (.deco--stars3--b rotates) and their idle loops animate it too —
+   translate/scale compose with all of that instead of overwriting it.
+   Deliberately no overshoot: this is ambient art settling in behind the
+   cards, and it should read as a separate, quieter layer than their spring.
+   --dd is written per-deco by primeLeaf(), offset past the last card. */
+.deco{
+  opacity:0;translate:0 14px;
+  transition:opacity .4s var(--ease),translate .5s var(--ease);
+  transition-delay:var(--dd,0ms);
+}
+.leaf.is-open .deco{opacity:1;translate:0 0}
+.deco svg{display:block;overflow:visible;fill:currentColor}
+
+/* ---------- shared bits reused across pages ---------- */
+/* three small stars, used inline beside a header's note text */
+.deco--stars3{width:56px;height:18px;flex:none}
+.deco--stars3--b{transform:rotate(-6deg)}
+.deco-s3__star{color:var(--gold);fill:currentColor;opacity:0;animation:twinkle 4.4s ease-in-out infinite}
+.deco-s3__star--2{animation-delay:1.3s}
+.deco-s3__star--3{animation-delay:2.6s}
+
+/* header-slot placement: pushed to the far right of .spread__head, which is
+   itself align-items:flex-end — align-self reinforces that so a short icon
+   never drifts away from the title's baseline */
+.deco--header{display:inline-flex;align-items:center;align-self:flex-end;margin-left:auto;margin-right:20px;flex:none;color:var(--ink-3)}
+
+/* ---------- hero : cloud bank + plane, constellation, desk clip, notes ---------- */
+.deco--heroClouds{position:absolute;left:0;bottom:0;width:clamp(220px,34vw,380px);color:var(--blue-pale)}
+.deco-hc{fill:currentColor}
+.deco-hc--a{opacity:.9;animation:decoCloudA 34s ease-in-out infinite}
+.deco-hc--b{opacity:.62;animation:decoCloudB 52s ease-in-out infinite reverse}
+.deco-hc--c{opacity:.46;animation:decoCloudC 71s ease-in-out infinite}
+@keyframes decoCloudA{0%,100%{transform:translate(0,0)}50%{transform:translate(14px,-6px)}}
+@keyframes decoCloudB{0%,100%{transform:translate(0,0)}50%{transform:translate(-10px,4px)}}
+@keyframes decoCloudC{0%,100%{transform:translate(0,0)}50%{transform:translate(8px,3px)}}
+.deco-hc-plane{animation:decoPlaneFly 22s linear infinite}
+.deco-hc-plane__trail{fill:none;stroke:var(--blue-soft);stroke-width:1.6;stroke-dasharray:100;stroke-dashoffset:100;opacity:0;animation:decoTrailDraw 22s linear infinite}
+@keyframes decoPlaneFly{0%,8%{opacity:0}12%{opacity:1}82%{opacity:1}100%{opacity:0;transform:translateX(10px)}}
+@keyframes decoTrailDraw{0%{stroke-dashoffset:100;opacity:0}12%{opacity:.7}80%{stroke-dashoffset:0;opacity:.7}100%{stroke-dashoffset:0;opacity:0}}
+
+.deco--constellation{position:absolute;left:3%;top:5%;width:120px}
+.deco-conste__line{fill:none;stroke:var(--ink-3);stroke-width:1.4;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;opacity:0;animation:decoConsteDraw 10s ease-in-out infinite}
+@keyframes decoConsteDraw{0%{stroke-dashoffset:100;opacity:0}20%{opacity:.55}55%{stroke-dashoffset:0;opacity:.55}88%{stroke-dashoffset:0;opacity:.55}100%{stroke-dashoffset:0;opacity:0}}
+.deco-conste__star{position:absolute;color:var(--gold);opacity:.3;animation:twinkle 5s ease-in-out infinite}
+.deco-conste__star--2{animation-delay:1.1s}
+.deco-conste__star--3{animation-delay:2.2s}
+.deco-conste__star--4{animation-delay:3.3s}
+
+.deco--clip{display:block;color:var(--ink-3);animation:decoClipRock 9s ease-in-out infinite;transform-origin:50% 12%;text-align:center}
+.deco-clip__pin{width:16px;height:26px}
+.deco-clip__washi{display:inline-block;width:22px;height:14px;margin-left:6px;background:var(--tape-2);transform:rotate(-6deg);vertical-align:middle;border-radius:1px}
+@keyframes decoClipRock{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+
+.deco--heroNotes{position:absolute;right:2%;top:6%;bottom:10%;width:70px}
+.deco-hn__note{color:var(--blush);fill:currentColor;opacity:0;transform-box:fill-box;animation:decoHnFloat 11s ease-in-out infinite}
+.deco-hn__note--2{color:var(--blue-soft);animation-duration:13s;animation-delay:2s}
+.deco-hn__note--3{animation-duration:15s;animation-delay:4.5s}
+.deco-hn__note--4{color:var(--blue-soft);animation-duration:12s;animation-delay:1s}
+.deco-hn__note--5{animation-duration:14s;animation-delay:6s}
+@keyframes decoHnFloat{
+  0%{opacity:0;transform:translate(0,0)}
+  10%{opacity:.6}
+  50%{transform:translate(6px,-90px)}
+  90%{opacity:.6}
+  100%{opacity:0;transform:translate(-4px,-180px)}
+}
+
+/* ---------- about : notebook + pen, sticky-note header, yarn ball ---------- */
+.deco--notebook{position:absolute;left:0;bottom:clamp(18px,4%,40px);width:170px;color:var(--ink-3)}
+.deco-nb__rock{transform-box:fill-box;transform-origin:50% 100%;animation:decoNbRock 9s ease-in-out infinite}
+@keyframes decoNbRock{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(1.5deg)}}
+.deco-nb__page{fill:var(--paper);stroke:var(--edge);stroke-width:1.5}
+.deco-nb__spine{stroke:var(--edge);stroke-width:1.5}
+.deco-nb__lines{stroke:var(--dot);stroke-width:1}
+.deco-nb__melody{fill:none;stroke:var(--blue-soft);stroke-width:1.6;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;animation:decoNbMelody 9s ease-in-out infinite}
+@keyframes decoNbMelody{
+  0%{stroke-dashoffset:100;opacity:.9}
+  60%{stroke-dashoffset:0;opacity:.9}
+  82%{stroke-dashoffset:0;opacity:.9}
+  93%{opacity:0}
+  100%{stroke-dashoffset:100;opacity:0}
+}
+.deco-nb__pen{transform-box:fill-box;fill:var(--ink-3);animation:decoNbPen 9s ease-in-out infinite}
+@keyframes decoNbPen{
+  0%{transform:translate(96px,45px);opacity:0}
+  8%{opacity:.9}
+  60%{transform:translate(168px,45px);opacity:.9}
+  82%{transform:translate(168px,45px);opacity:.9}
+  93%{opacity:0}
+  100%{transform:translate(96px,45px);opacity:0}
+}
+
+.deco--stickies svg{width:34px;height:30px}
+.deco-sticky--back{fill:var(--mint);opacity:.85}
+.deco-sticky--front{fill:var(--gold);opacity:.95;transform-box:fill-box;transform-origin:8% 90%;animation:decoStickyPeel 8s ease-in-out infinite}
+@keyframes decoStickyPeel{0%,70%,100%{transform:rotate(0)}77%{transform:rotate(-9deg) translate(-1px,-1px)}85%{transform:rotate(0)}}
+
+.deco--yarn{position:absolute;right:0;bottom:clamp(14px,4%,36px);color:var(--blush);text-align:right}
+.deco-yarn__ball{display:inline-block;animation:decoYarnSpin 16s linear infinite}
+@keyframes decoYarnSpin{to{transform:rotate(360deg)}}
+.deco-yarn__thread{display:block;margin-top:-4px}
+.deco-yarn__thread path{fill:none;stroke:var(--blush);stroke-width:1.4;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;animation:decoYarnThread 12s ease-in-out infinite}
+@keyframes decoYarnThread{0%,100%{stroke-dashoffset:100}50%{stroke-dashoffset:0}}
+
+/* ---------- research : binaural head, gutter stitch + stars, scope + stars header ---------- */
+/* left ear's arc fires slightly before the right ear's — a small nod to
+   interaural time difference, the cue HRTF/binaural audio relies on */
+.deco--binaural{position:absolute;right:0;bottom:0;width:100px;color:var(--ink-3)}
+.deco-bin__head{fill:var(--blue-pale);stroke:var(--ink-3);stroke-width:1.6}
+.deco-bin__nose{fill:var(--ink-3)}
+.deco-bin__ear{fill:var(--ink-3)}
+.deco-bin__wave{fill:none;stroke:var(--blue-soft);stroke-width:1.6;stroke-linecap:round}
+.deco-bin__wave path{opacity:0;transform-box:fill-box;transform-origin:center;animation:decoBinWave 2.6s ease-out infinite}
+.deco-bin__wave--l path:nth-child(2){animation-delay:.15s}
+.deco-bin__wave--r path{animation-delay:.35s}
+.deco-bin__wave--r path:nth-child(2){animation-delay:.5s}
+@keyframes decoBinWave{0%{opacity:.9;transform:scale(.6)}70%{opacity:0}100%{opacity:0;transform:scale(1.05)}}
+
+.deco--gutterStitch{position:absolute;left:60.4%;top:8%;bottom:8%;width:24px;transform:translateX(-1%)}
+.deco-gs__dots{stroke:var(--dot);stroke-width:2}
+.deco-gs__star{color:var(--gold);fill:currentColor;opacity:0;animation:twinkle 4s ease-in-out infinite}
+.deco-gs__star--2{animation-delay:1.3s}
+.deco-gs__star--3{animation-delay:2.6s}
+
+.deco--scope svg{width:60px;height:26px;display:block}
+.deco--scope rect{fill:var(--paper);stroke:var(--edge);stroke-width:1}
+.deco-scope__wave{fill:none;stroke:var(--blue-soft);stroke-width:1.6;stroke-dasharray:12 12;animation:decoScopeScroll 3s linear infinite}
+@keyframes decoScopeScroll{to{stroke-dashoffset:-24}}
+
+/* ---------- projects : typewriter code line + chip, terminal placeholder ---------- */
+.deco--codeband{
+  position:absolute;left:0;right:0;bottom:clamp(16px,4%,44px);
+  display:flex;align-items:center;gap:16px;color:var(--ink-3);
+}
+.deco-code{font-family:var(--f-mono);font-size:.82rem;opacity:.6;white-space:nowrap;flex:none}
+.deco-code__caret{display:inline-block;width:7px;height:1em;margin-left:1px;background:currentColor;vertical-align:-2px;animation:caret .8s steps(1,end) infinite}
+.deco-code__trace{flex:1 1 auto;min-width:24px;height:10px;overflow:visible}
+.deco-code__trace line{stroke:var(--ink-3);stroke-width:1.4;stroke-dasharray:1 8;opacity:.5}
+.deco-chip{width:44px;height:34px;flex:none;color:var(--ink-3)}
+.deco-chip rect{fill:var(--paper);stroke:var(--ink-3);stroke-width:1.6}
+.deco-chip line{stroke:var(--ink-3);stroke-width:1.6}
+.deco-chip__led{fill:var(--gold);animation:decoChipLed 2.4s ease-in-out infinite}
+@keyframes decoChipLed{0%,100%{opacity:.3}50%{opacity:1}}
+
+.deco-placeholder{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  min-height:220px;background:transparent;box-shadow:none;
+  border:1.5px dashed var(--edge);color:var(--ink-3);text-align:center;
+}
+.deco-placeholder::after{content:none}
+.deco-placeholder__term{
+  display:block;width:52px;height:38px;border-radius:6px;
+  border:1.6px solid var(--ink-3);opacity:.55;position:relative;
+}
+.deco-placeholder__cursor{
+  position:absolute;left:8px;bottom:8px;width:7px;height:11px;background:currentColor;
+  animation:caret .8s steps(1,end) infinite;
+}
+.deco-placeholder__label{font-family:var(--f-hand);font-size:1.1rem}
+
+/* ---------- music : ribbon wave, clef header ---------- */
+/* .deco--social-band is shared with .deco--hahaha on the second music leaf —
+   kept even though the bow that used to sit in it here is gone. */
+.deco--social-band{position:absolute;left:0;right:0;bottom:100%;height:clamp(56px,7vw,84px);overflow:visible}
+
+.deco--ribbonwave{position:absolute;left:0;right:0;bottom:clamp(18px,5%,50px);height:40px;color:var(--blue-soft)}
+.deco-rw__line{fill:none;stroke:var(--blue-soft);stroke-width:2;opacity:.5}
+.deco--ribbonwave{animation:decoRwDrift 20s ease-in-out infinite}
+@keyframes decoRwDrift{0%,100%{transform:translateX(0)}50%{transform:translateX(8px)}}
+.deco-rw__note{color:var(--blush);fill:currentColor;opacity:.75;transform-box:fill-box;animation:decoRwBob 5s ease-in-out infinite}
+.deco-rw__note--2{animation-duration:4s;animation-delay:.6s}
+.deco-rw__note--3{animation-duration:6s;animation-delay:1.2s}
+@keyframes decoRwBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+
+.deco--clef{position:relative}
+.deco--clef svg.deco-clef__glyph{width:22px;height:22px;display:block}
+.deco-clef__glyph path{fill:none;stroke:var(--blue-deep);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:100;stroke-dashoffset:100;animation:decoClefDraw 8s ease-in-out infinite}
+@keyframes decoClefDraw{0%{stroke-dashoffset:100}30%{stroke-dashoffset:0}90%{stroke-dashoffset:0}100%{stroke-dashoffset:100}}
+.deco-clef__note{position:absolute;width:11px;height:14px;color:var(--blush);opacity:0}
+.deco-clef__note--1{left:26px;top:0;animation:decoClefNote 6s ease-out infinite}
+.deco-clef__note--2{left:34px;top:6px;animation:decoClefNote 6s ease-out infinite 3s}
+@keyframes decoClefNote{0%{opacity:0;transform:translateY(0)}20%{opacity:.9}100%{opacity:0;transform:translateY(-14px)}}
+
+/* ---------- music, continued : "ha ha ha" over goofs and giggles, microphone, EQ header ---------- */
+/* left:0 without right:0 (overriding the .deco--social-band default) so this
+   sits only above the parody card, not stretched over the demos card too */
+.deco--hahaha{
+  left:0;right:auto;width:50%;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  font-family:var(--f-hand);font-weight:700;
+}
+.deco-haha__word{
+  color:var(--blush);opacity:.7;transform-box:fill-box;
+  animation:decoHahaPop 2.4s ease-in-out infinite;
+}
+.deco-haha__word--1{font-size:1.3rem;--rot:-6deg;animation-delay:0s}
+.deco-haha__word--2{font-size:1.6rem;--rot:3deg;animation-delay:.25s}
+.deco-haha__word--3{font-size:1.9rem;--rot:-4deg;animation-delay:.5s}
+@keyframes decoHahaPop{
+  0%,60%,100%{transform:scale(.85) rotate(var(--rot,0deg));opacity:.55}
+  20%{transform:scale(1.12) rotate(var(--rot,0deg));opacity:1}
+}
+
+.deco--mic{position:absolute;left:0;bottom:clamp(14px,4%,36px);width:80px;color:var(--ink-3)}
+.deco-mic__body{fill:var(--blue-pale);stroke:var(--ink-3);stroke-width:1.8}
+.deco-mic__grille{stroke:var(--ink-3);stroke-width:1.2;opacity:.6}
+.deco-mic__stand,.deco-mic__pole,.deco-mic__base{fill:none;stroke:var(--ink-3);stroke-width:1.8;stroke-linecap:round}
+.deco--mic{animation:decoMicBob 6s ease-in-out infinite}
+@keyframes decoMicBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.deco-mic__waves{fill:none;stroke:var(--blue-soft);stroke-width:1.6;stroke-linecap:round}
+.deco-mic__waves path{opacity:.2;transform-box:fill-box;transform-origin:0% 50%;animation:decoMicWave 2.8s ease-in-out infinite}
+.deco-mic__waves path:last-child{animation-delay:.4s}
+@keyframes decoMicWave{0%,100%{opacity:.15;transform:scale(.85)}50%{opacity:.6;transform:scale(1.05)}}
+
+.deco--eq svg{width:30px;height:24px;display:block}
+.deco-eq__bar{fill:var(--blue-soft);transform-box:fill-box;transform-origin:center;animation:decoEqBreathe 3s ease-in-out infinite}
+.deco-eq__bar--1{height:6px;animation-duration:2.4s}
+.deco-eq__bar--2{height:12px;animation-duration:3s;animation-delay:.2s}
+.deco-eq__bar--3{height:18px;animation-duration:2.7s;animation-delay:.4s}
+.deco-eq__bar--4{height:10px;animation-duration:3.3s;animation-delay:.1s}
+.deco-eq__bar--5{height:14px;animation-duration:2.6s;animation-delay:.3s}
+@keyframes decoEqBreathe{0%,100%{transform:scaleY(.5)}50%{transform:scaleY(1)}}
+.leaf.is-audio-playing .deco-eq__bar{animation-duration:.5s}
+
+/* ---------- contact : dream cloud, shooting stars, star-cluster header ---------- */
+.deco--dreamcloud{position:absolute;left:0;bottom:clamp(16px,4%,40px);width:150px;color:var(--blue-pale)}
+.deco--dreamcloud use{fill:currentColor;animation:decoDcBob 9s ease-in-out infinite}
+@keyframes decoDcBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.deco-dc__z{font-family:var(--f-hand);font-weight:700;fill:var(--ink-3);opacity:0}
+.deco-dc__z--1{font-size:11px;animation:decoZRise 6s ease-in-out infinite}
+.deco-dc__z--2{font-size:14px;animation:decoZRise 6s ease-in-out infinite 2s}
+.deco-dc__z--3{font-size:17px;animation:decoZRise 6s ease-in-out infinite 4s}
+@keyframes decoZRise{0%{opacity:0;transform:translateY(0)}25%{opacity:.7}75%{opacity:.7}100%{opacity:0;transform:translateY(-16px)}}
+
+.deco--shootingstars{position:absolute;right:0;bottom:clamp(30px,8%,80px);width:220px;height:100px}
+.deco-ss__star{color:var(--blue-soft);opacity:0;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;fill:currentColor}
+.deco-ss__star--1{animation:decoShoot 11s linear infinite}
+.deco-ss__star--2{animation:decoShoot 17s linear infinite 4s}
+@keyframes decoShoot{
+  0%,60%{opacity:0;transform:translate(0,0)}
+  62%{opacity:1}
+  74%{opacity:1;transform:translate(150px,60px)}
+  76%{opacity:0;transform:translate(158px,63px)}
+  100%{opacity:0;transform:translate(0,0)}
+}
+
+/* ---------- crochet leaf : big sleepy cloud, footer stars, shooting star, drifting z's, dots ---------- */
+/* the main sleep-theme visual, in the large empty band above the photos */
+.deco--sleepycloud{position:absolute;left:4%;top:4%;width:240px;color:var(--blue-pale)}
+.deco--sleepycloud use{fill:currentColor;animation:decoDcBob 9s ease-in-out infinite}
+.deco-sc__z{font-family:var(--f-hand);font-weight:700;fill:var(--ink-3);opacity:0}
+.deco-sc__z--1{font-size:22px;animation:decoZRise 6.5s ease-in-out infinite}
+.deco-sc__z--2{font-size:28px;animation:decoZRise 6.5s ease-in-out infinite 2.2s}
+.deco-sc__z--3{font-size:34px;animation:decoZRise 6.5s ease-in-out infinite 4.4s}
+
+.deco--footerStars{position:absolute;left:5%;bottom:170px;width:56px;height:18px}
+.deco--footerShoot{position:absolute;left:8%;bottom:100px;width:60px;height:60px}
+.deco-fs__star{color:var(--blue-soft);opacity:0;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;fill:currentColor;animation:decoShoot 13s linear infinite 1s}
+
+.deco--footerZ{position:absolute;right:6%;bottom:64px;width:56px;height:84px}
+.deco-fz__z{font-family:var(--f-hand);font-weight:700;fill:var(--ink-3);opacity:0}
+.deco-fz__z--1{font-size:19px;animation:decoZRise 7s ease-in-out infinite}
+.deco-fz__z--2{font-size:24px;animation:decoZRise 7s ease-in-out infinite 2.3s}
+.deco-fz__z--3{font-size:29px;animation:decoZRise 7s ease-in-out infinite 4.6s}
+
+.deco--dots{position:absolute;inset:0;width:100%;height:100%}
+.deco-dots__dot{fill:#fff;opacity:.5;animation:twinkle var(--dur,5s) ease-in-out infinite;animation-delay:var(--del,0s)}
+
+}
+
+/* projects placeholder card only makes sense while the row is 2-up (900–1059px) */
+@media (min-width:1060px){
+  .deco-placeholder{display:none}
 }
 
 /* ---------- reduced motion ---------- */
@@ -1359,6 +2135,7 @@ html[data-sky="night"] .totop{color:var(--blue)}
     transition-duration:.001ms !important;
   }
   .reveal{opacity:1;transform:none}
+  .deco{opacity:1;translate:none;transition:none}
   .uline{stroke-dashoffset:0}
   .spark{display:none}
   .th-target--a{transform:translate(70px,38px)}
@@ -1377,9 +2154,21 @@ html[data-sky="night"] .totop{color:var(--blue)}
   .journey .plane{left:50%;top:50%;opacity:1}
   .tw__c{opacity:1}
   .tw__caret{display:none}
-  .pagefly{display:none}
   .hrtf__target{r:4}
   .beam__wave{opacity:.6}
+  .deco-hc-plane,.deco-hc-plane__trail,.deco-clef__note,
+  .deco-nb__pen,.deco-dc__z,.deco-fz__z,.deco-ss__star,.deco-fs__star{display:none}
+  .deco-conste__line{opacity:.5;stroke-dashoffset:0}
+  .deco-bin__wave path{opacity:.4;transform:scale(1)}
+  .deco-yarn__thread path{stroke-dashoffset:0}
+  .deco-nb__melody{opacity:.9;stroke-dashoffset:0}
+  .deco-clef__glyph path{stroke-dashoffset:0}
+  .deco-code__caret,.deco-placeholder__cursor{animation:none;opacity:1}
+  .deco--dreamcloud use,.deco--sleepycloud use{transform:none}
+  .deco-sc__z{display:none}
+  .leaf{transform:none !important}
+  .leaf:not(.is-current){opacity:0;visibility:hidden}
+  .book__stage{perspective:none}
 }
 
 /* ---------- print ---------- */
