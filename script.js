@@ -9,6 +9,9 @@
   var root = doc.documentElement;
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  // touch/pen — used to shrink the page-turn drag threshold (dragMove below)
+  // and to gate the anywhere-swipe gesture to non-mouse pointers
+  var coarsePointer = window.matchMedia('(pointer: coarse)').matches;
 
   /* ---------------------------------------------------------
      0 · tiny helpers
@@ -50,6 +53,31 @@
       frag.appendChild(s);
     }
     host.appendChild(frag);
+  }());
+
+
+  /* ---------------------------------------------------------
+     2.5 · nav tabs — scrollable-edge fade
+     Below ~390px the 5 tabs don't all fit even after the phone-tier CSS
+     trims their padding, so .tabs__scroll falls back to a hidden-scrollbar
+     horizontal scroller (see style.css). is-scrollable only toggles the
+     fade mask on when there's genuinely more to scroll to — computing it in
+     CSS alone would fade the last tab permanently, even on the far more
+     common phones where all five already fit.
+     --------------------------------------------------------- */
+  (function tabsFade() {
+    var scrollEl = $('.tabs__scroll');
+    if (!scrollEl) return;
+    function update() {
+      scrollEl.classList.toggle('is-scrollable', scrollEl.scrollWidth > scrollEl.clientWidth + 1);
+    }
+    update();
+    window.addEventListener('resize', update);
+    // the tab labels are set in the hand/body webfont, which swaps in
+    // asynchronously after first paint — re-measure once it's actually
+    // loaded so an initial fallback-font measurement can't leave the class
+    // stuck wrong for the rest of the visit
+    if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(update);
   }());
 
 
@@ -344,6 +372,12 @@
       var leaf = leaves[i];
       if (!leaf) return;
 
+      // Phone tier lets .leaf__scroll scroll (see style.css) — without this,
+      // a page remembers however far down it was scrolled last time it was
+      // open, so flipping back to it lands mid-page instead of at the top.
+      var scrollRoot = leaf.querySelector('.leaf__scroll');
+      if (scrollRoot) scrollRoot.scrollTop = 0;
+
       var items = $$('.reveal', leaf);
       var decos = $$('.deco', leaf);
       if (!items.length && !decos.length) return;
@@ -634,7 +668,7 @@
     /* ---- corner drag / swipe ---- */
     var drag = { active: false, dir: 0, moving: null, startX: 0, ratio: 0 };
 
-    function dragStart(e, dir) {
+    function dragStart(e, dir, startX) {
       var atEdge = (dir === 1 && current === total - 1) || (dir === -1 && current === 0);
       if (atEdge) return;
       navToken++; // cancel any in-flight animation so it can't fight the drag
@@ -658,7 +692,7 @@
       leaf.classList.add('is-turning');
       drag.active = true;
       drag.dir = dir;
-      drag.startX = e.clientX;
+      drag.startX = startX !== undefined ? startX : e.clientX;
       drag.ratio = 0;
       drag.moving = leaf;
       drag.moving.classList.add('is-dragging');
@@ -670,7 +704,11 @@
       if (!drag.active) return;
       var dx = e.clientX - drag.startX;
       var w = window.innerWidth || 1;
-      var t = Math.max(0, Math.min(1, (drag.dir === 1 ? -dx : dx) / (w * 0.55)));
+      // full-width corner drags stay proportional to the viewport; a coarse
+      // (touch) pointer gets a flat, shorter throw so an ordinary thumb
+      // swipe is enough to commit a turn
+      var span = coarsePointer ? Math.min(w * 0.35, 180) : w * 0.55;
+      var t = Math.max(0, Math.min(1, (drag.dir === 1 ? -dx : dx) / span));
       drag.ratio = t;
       var angle = drag.dir === 1 ? -180 * t : -180 * (1 - t);
       drag.moving.style.transform = 'rotateY(' + angle.toFixed(2) + 'deg)';
@@ -734,6 +772,52 @@
       doc.addEventListener('visibilitychange', function () { if (doc.hidden) dragEnd(false); });
     }
 
+    /* ---- swipe-anywhere (touch/pen) ----
+       The corner hitboxes are hidden on phone (style.css, phone tier) since
+       a 12vw strip on each edge eats taps on real content there. This is
+       their replacement: a horizontal drag started anywhere on the page
+       turns it, while a vertical one is left alone so .leaf__scroll's native
+       scrolling (also phone-tier only) still works.
+       Axis is resolved once, a few pixels into the gesture, rather than on
+       pointerdown, so a moving finger gets to "vote" between a page-turn and
+       a scroll before either commits — deciding on pointerdown alone would
+       have to guess. Until that vote lands, nothing is claimed and the
+       browser is free to start its own vertical pan (touch-action:pan-y on
+       .leaf__scroll permits exactly that). */
+    function bindSwipe() {
+      var AXIS_THRESHOLD = 10; // px of movement before committing to an axis
+      var pending = null;      // {x0,y0,pointerId} while the axis is undecided
+
+      function clearPending() {
+        pending = null;
+        doc.removeEventListener('pointermove', onPendingMove);
+      }
+
+      function onPendingMove(e) {
+        if (!pending || e.pointerId !== pending.pointerId) return;
+        var dx = e.clientX - pending.x0, dy = e.clientY - pending.y0;
+        if (Math.abs(dx) < AXIS_THRESHOLD && Math.abs(dy) < AXIS_THRESHOLD) return;
+        var x0 = pending.x0;
+        clearPending();
+        if (Math.abs(dy) >= Math.abs(dx)) return; // vertical wins — native scroll owns it
+        var dir = dx < 0 ? 1 : -1; // dragging left uncovers the next page
+        var atEdge = (dir === 1 && current === total - 1) || (dir === -1 && current === 0);
+        if (atEdge || drag.active) return;
+        dragStart(e, dir, x0);
+      }
+
+      stage.addEventListener('pointerdown', function (e) {
+        // mouse users still have the corners/keyboard/buttons; this gesture
+        // is for touch and pen only, so click-dragging text doesn't turn a page
+        if (e.pointerType === 'mouse' || drag.active) return;
+        if (e.target.closest && e.target.closest('a,button,input,textarea,select,[data-no-swipe]')) return;
+        pending = { x0: e.clientX, y0: e.clientY, pointerId: e.pointerId };
+        doc.addEventListener('pointermove', onPendingMove, { passive: true });
+        doc.addEventListener('pointerup', clearPending, { once: true });
+        doc.addEventListener('pointercancel', clearPending, { once: true });
+      });
+    }
+
     function bindControls() {
       if (pagePrev) pagePrev.addEventListener('click', function () { goTo(current - 1); });
       if (pageNext) pageNext.addEventListener('click', function () { goTo(current + 1); });
@@ -773,6 +857,7 @@
     warmResume();
 
     bindCorners();
+    bindSwipe();
     bindControls();
     bindKeyboard();
     bindTabsAndAnchors();

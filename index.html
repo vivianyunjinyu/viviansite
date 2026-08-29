@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- viewport-fit=cover opts into env(safe-area-inset-*), which otherwise
+     reads as 0px everywhere. The bottom prev/next bar on phones is pinned to
+     the very bottom edge, so it needs the real inset to clear the home
+     indicator on notched devices. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Yunjin (Vivian) Yu · music, code &amp; sound</title>
 <meta name="description" content="Yunjin (Vivian) Yu. ICAM-Music at UC San Diego, Electrical Engineering minor. Sonic arts researcher, audio-plugin developer, singer-songwriter." />
 <meta name="author" content="Yunjin (Vivian) Yu" />
@@ -205,6 +209,10 @@
   </div>
 
   <p class="hero__navhint"><kbd>←</kbd> <kbd>→</kbd> keys work too,<br> or just drag a corner →</p>
+  <!-- phone-tier swap: corner-drag is retired on phones (it blocks taps on
+       content), so this reads "swipe" instead of "drag a corner". Toggled
+       purely by CSS (see the phone-tier block in style.css) — no JS. -->
+  <p class="hero__navhint--touch">swipe left or right to turn pages</p>
 </div>
 </section>
 
@@ -555,7 +563,12 @@
       <span class="card__badge card__badge--wip">in progress</span>
 
       <div class="card__art card__art--theremin" aria-hidden="true">
-        <svg class="th" viewBox="0 0 240 104" preserveAspectRatio="xMidYMid slice">
+        <!-- `meet`, not `slice`: the art must survive .card__art being made
+             shorter on phones. With slice the box crops instead of scaling,
+             and the sensors + ground line sit right on the bottom edge that
+             would be cut. meet always fits the whole illustration, letterboxed
+             by .card__art's own gradient. -->
+        <svg class="th" viewBox="0 0 240 104" preserveAspectRatio="xMidYMid meet">
           <line class="th-ground" x1="6" y1="93" x2="234" y2="93"/>
           <line class="th-axis" x1="70" y1="20" x2="70" y2="84"/>
           <line class="th-axis" x1="170" y1="20" x2="170" y2="84"/>
@@ -608,7 +621,7 @@
     <article class="card reveal" data-tilt>
       <div class="tape tape--tc"></div>
       <div class="card__art card__art--vocoder" aria-hidden="true">
-        <svg class="vo" viewBox="0 0 240 104" preserveAspectRatio="xMidYMid slice">
+        <svg class="vo" viewBox="0 0 240 104" preserveAspectRatio="xMidYMid meet">
           <g class="vo-knob vo-knob--l">
             <path class="vo-arc" d="M-11 7a13 13 0 1122 0"/>
             <circle class="vo-cap-c" r="9"/>
@@ -715,7 +728,7 @@
     <article class="card reveal" data-tilt>
       <div class="tape tape--tc"></div>
       <div class="card__art card__art--lfo" aria-hidden="true">
-        <svg class="wh" viewBox="0 0 240 104" preserveAspectRatio="xMidYMid slice">
+        <svg class="wh" viewBox="0 0 240 104" preserveAspectRatio="xMidYMid meet">
           <g class="wh-grid">
             <line x1="6" y1="26" x2="234" y2="26"/>
             <line x1="6" y1="56" x2="234" y2="56"/>

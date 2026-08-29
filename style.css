@@ -543,6 +543,16 @@ html[data-time="night"] .hero__navhint{color:var(--ink-2)}
   padding:1px 6px;border-radius:5px;margin:0 1px;
   background:var(--paper-2);border:1px solid var(--edge);box-shadow:0 1px 0 var(--edge);
 }
+/* touch-worded twin of .hero__navhint above — corner-drag doesn't exist on
+   phones (the corners are hidden there, see the phone-tier block below) so
+   the hint can't tell people to use it. Same base treatment, own visibility
+   switch: off everywhere by default, only phone tier turns it on. */
+.hero__navhint--touch{
+  display:none;
+  margin-top:14px;text-align:center;
+  font-family:var(--f-hand);font-size:.95rem;color:var(--ink-3);
+}
+html[data-time="night"] .hero__navhint--touch{color:var(--ink-2)}
 
 /* ============================================================
    spreads
@@ -1191,7 +1201,7 @@ html[data-time="night"] .mailbtn__label{color:var(--blue)}
 }
 .resume__pdf{display:none;width:100%;height:640px;border:0;background:#fff}
 .resume__fallback{
-  display:grid;place-items:center;height:280px;text-decoration:none;
+  display:grid;place-items:center;min-height:280px;text-decoration:none;
   background:repeating-linear-gradient(45deg,#f7fafd 0 12px,#eef4fa 12px 24px);
 }
 .resume__page{
@@ -1340,14 +1350,18 @@ html.book-active .leaf.is-priming .deco{transition:none}
    ============================================================ */
 html.book-active body{
   display:flex;flex-direction:column;
-  height:100vh;overflow:hidden;
+  height:100vh;   /* fallback for browsers without dvh */
+  height:100dvh;  /* tracks the browser's actual visible viewport, so the
+                     URL/tab bar on mobile Safari/Chrome doesn't permanently
+                     cover the bottom of every page */
+  overflow:hidden;
 }
 html.book-active .topbar{flex:none}
 
 html.book-active .book{
   position:relative;flex:1 1 auto;min-height:0;
   max-width:min(1780px, calc(100vw - 32px));width:100%;margin:0 auto;
-  padding:0 14px clamp(10px,2vw,18px);
+  padding:0 14px calc(clamp(10px,2vw,18px) + env(safe-area-inset-bottom));
 }
 /* see the inline boot script in index.html <head> */
 html.book-booting .book__stage{visibility:hidden}
@@ -1435,9 +1449,19 @@ html.book-active .leaf__scroll{
 /* Below the guaranteed-fit floor (phone landscape, roughly) the fluid scale
    above has run out of room, and shrinking further would cross into
    unreadable. Allow scrolling there rather than silently clipping the bottom
-   of the page off — losing content is worse than a scrollbar. */
-@media (max-height:480px){
-  html.book-active .leaf__scroll{overflow-y:auto;-webkit-overflow-scrolling:touch}
+   of the page off — losing content is worse than a scrollbar.
+   Phone tier (<=699px) opts out of the one-screen fit model entirely (see
+   the phone-tier block further down), so it gets the same scrolling leaf
+   regardless of height. touch-action:pan-y hands vertical drags to the
+   browser's native scroll while leaving horizontal drags free for the
+   swipe-to-turn gesture in script.js (bindSwipe); overscroll-behavior stops
+   a scroll at the top/bottom of a page from chaining into a pull-to-refresh
+   or bouncing the body underneath. */
+@media (max-width:699px), (max-height:480px){
+  html.book-active .leaf__scroll{
+    overflow-y:auto;-webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;touch-action:pan-y;
+  }
 }
 
 /* tighter vertical rhythm inside the book, where a page's height is capped by
@@ -1487,7 +1511,8 @@ html.book-active .line__wrap{padding-top:8px}
    scroll, and the nav hint duplicates the visible prev/next controls. */
 @media (max-height:760px){
   html.book-active .hero__scrolltip,
-  html.book-active .hero__navhint{display:none}
+  html.book-active .hero__navhint,
+  html.book-active .hero__navhint--touch{display:none}
 }
 /* The crochet leaf centres its POLAROID ROW on the page, not its content
    block. Its three in-flow children are the heading, the polaroid row, and
@@ -1700,6 +1725,108 @@ html.book-active .leaf:not(.is-current) .deco-dots__dot{
 /* ============================================================
    responsive
    ============================================================ */
+/* ============================================================
+   PHONE TIER (<=699px) — opts out of the one-screen fit model above.
+   That model balances page height by squeezing padding/gaps/font-size
+   down to a floor; on a real phone, single-column content is often 1.5-2x
+   a screen's height, so the floor was reached and pages started losing
+   their bottom half to overflow:hidden. Below this width .leaf__scroll
+   scrolls instead (see the generalised escape-hatch above), so the squeeze
+   is no longer earning anything — this block gives most of that spacing
+   back for comfort/readability, then handles touch nav and a few
+   layout/overflow fixes that are phone-specific rather than fit-model ones.
+   ============================================================ */
+@media (max-width:699px){
+  /* ---- give the fit-model squeeze back now that pages can scroll ---- */
+  html.book-active body{font-size:16px;line-height:1.5}
+  html.book-active .paper,
+  html.book-active .card,
+  html.book-active .indexcard{padding:13px 16px}
+  html.book-active .grid,
+  html.book-active .research__col{gap:14px}
+  html.book-active .spread__head{margin-bottom:18px}
+  html.book-active .spread__title{font-size:clamp(2rem,8vw,2.6rem)}
+  /* the calc(50vh - 330px) push exists to fill leftover space on a page
+     that's forced to exactly one screen — with scrolling that constraint
+     is gone, and the push just adds dead space above the social card */
+  html.book-active .paper--social{margin-top:0}
+
+  /* crochet leaf: the 1fr/auto/1fr grid centres the polaroid row in the
+     remaining viewport height, which only makes sense when the page can't
+     scroll. Flowing top-to-bottom lets it scroll like every other page
+     instead of vertically centering content that no longer fits. */
+  html.book-active .line .leaf__scroll{grid-template-rows:none;display:block}
+  html.book-active .line .line__h,
+  html.book-active .line .footer{align-self:auto}
+  html.book-active .line .footer__sign{
+    position:static;margin:0;text-align:center;
+  }
+
+  /* room at the bottom of every page for the fixed prev/next bar below,
+     plus the home-indicator inset on notched phones */
+  html.book-active .hero,
+  html.book-active .spread,
+  html.book-active .line{
+    padding-bottom:calc(76px + env(safe-area-inset-bottom));
+  }
+
+  /* a soft fade at the bottom edge of each page hints there's more to
+     scroll to — subtle, so it doesn't read as a hard cutoff even on a
+     page that's already fully visible */
+  html.book-active .leaf::after{
+    content:"";position:absolute;left:0;right:0;bottom:0;height:34px;
+    background:linear-gradient(to bottom,transparent,var(--paper) 88%);
+    pointer-events:none;
+  }
+
+  /* ---- touch navigation ----
+     the corner hitboxes are 12vw wide on each edge — ~24% of a phone
+     screen combined — and sit at z-index:40 over the full page height, so
+     they eat taps on real content near the margins. bindSwipe() in
+     script.js is the replacement (swipe anywhere on the page body). */
+  html.book-active .book__corner{display:none}
+
+  /* the floating pill becomes a full-width, thumb-reachable bar pinned to
+     the bottom edge, clear of the home indicator via safe-area-inset. */
+  html.book-active .book__controls{
+    position:fixed;left:0;right:0;bottom:0;top:auto;
+    transform:none;width:100%;justify-content:space-between;
+    border-radius:0;border-width:1.5px 0 0;
+    padding:8px calc(16px + env(safe-area-inset-right))
+            calc(8px + env(safe-area-inset-bottom))
+            calc(16px + env(safe-area-inset-left));
+  }
+  .pagebtn{padding:12px 18px;font-size:.9rem;min-height:44px}
+  .book__pageno{font-size:.74rem}
+
+  /* the desktop hint mentions corner-drag, which no longer exists here */
+  html.book-active .hero__navhint{display:none}
+  html.book-active .hero__navhint--touch{display:block}
+
+  /* ---- nav bar: fit all 5 tabs without the hidden horizontal scroll ----
+     brand + 5 tabs with their 01-05 numerals runs to ~455px, wider than
+     any phone — dropping the numerals and tightening padding gets it under
+     ~390px wide so every tab is visible at once on most phones in use. */
+  .tab i{display:none}
+  .tab{padding:6px 8px;font-size:.8rem}
+  .tabs__brand{font-size:1.2rem}
+  /* fallback for the narrowest devices (~375px and below), where even the
+     tightened tabs don't all fit and .tabs__scroll falls back to a
+     hidden-scrollbar horizontal scroller — fades the trailing edge so it
+     reads as scrollable instead of just clipped. tabsFade() in script.js
+     toggles is-scrollable only when there's genuinely more to scroll to, so
+     the far more common phones where all five tabs already fit don't get a
+     permanently dimmed last tab. */
+  .tabs__scroll.is-scrollable{
+    mask-image:linear-gradient(to right,#000 0%,#000 88%,transparent 100%);
+    -webkit-mask-image:linear-gradient(to right,#000 0%,#000 88%,transparent 100%);
+  }
+
+  /* ---- project card art: shrink, don't crop (the meet/slice fix for the
+     three project SVGs lives in index.html) ---- */
+  .card__art{height:auto;aspect-ratio:240/104;max-height:96px;margin-bottom:12px}
+}
+
 /* narrow: let the systems grow and drop the staff-position offsets,
    otherwise wrapped chips land on top of each other */
 @media (max-width:760px){
@@ -1719,7 +1846,7 @@ html.book-active .leaf:not(.is-current) .deco-dots__dot{
   .paper--fig,.paper--terms,.paper--beam{margin-left:0;margin-right:0}
 }
 
-@media (max-width:400px){
+@media (max-width:699px){
   .journey{flex-direction:column;align-items:flex-start;gap:2px}
   .journey__stop{flex:none;font-size:1.28rem}
   .journey__hop{flex:none;width:20px;height:26px;margin-left:24px}
@@ -1736,7 +1863,7 @@ html.book-active .leaf:not(.is-current) .deco-dots__dot{
   }
 }
 
-@media (max-width:430px){
+@media (max-width:699px){
   .contactlist li{flex-direction:column;align-items:flex-start;gap:1px}
   .contactlist span{text-align:left}
   .entry__top{gap:6px}
@@ -1745,6 +1872,31 @@ html.book-active .leaf:not(.is-current) .deco-dots__dot{
 @media (min-width:600px){
   .tabs__name{display:inline}
   .stat{gap:34px}
+}
+
+/* tablet floor — closes the old dead zone where nothing between 620px and
+   819px adapted at all. These are the grid switches that only need a bit
+   more width than a single phone column to pay off; the ones that need the
+   full desktop width (the hero split, research, the beam figure, the social
+   row, the résumé swap) stay in the 820px block below. */
+@media (min-width:700px){
+  .grid--about{grid-template-columns:repeat(6,1fr);align-items:start}
+  .paper--wide{grid-column:span 4}
+  .paper--check{grid-column:span 2}
+  .paper--edu{grid-column:span 3}
+  .paper--kit{grid-column:span 3}
+  html.book-active .grid--about{row-gap:35px}
+
+  .grid--music{grid-template-columns:repeat(6,1fr);align-items:start}
+  .paper--releases{grid-column:span 3}
+  .paper--scores{grid-column:span 3}
+  .paper--parody{grid-column:span 3}
+  .paper--demos{grid-column:span 3}
+  .paper--social{grid-column:span 6}
+
+  .grid--projects{grid-template-columns:repeat(2,1fr)}
+
+  .grid--contact{grid-template-columns:1fr 1.15fr;align-items:start}
 }
 
 @media (min-width:820px){
@@ -1772,25 +1924,9 @@ html.book-active .leaf:not(.is-current) .deco-dots__dot{
     max-width:200px;text-align:right;font-size:.82rem;line-height:1.4;
   }
 
-  .grid--about{grid-template-columns:repeat(6,1fr);align-items:start}
-  .paper--wide{grid-column:span 4}
-  .paper--check{grid-column:span 2}
-  .paper--edu{grid-column:span 3}
-  .paper--kit{grid-column:span 3}
-  /* row-gap only — column-gap keeps the value the shared `.grid` rule sets,
-     so wide/check and edu/kit stay the normal distance apart. row-gap is a
-     longhand, so it overrides just that one axis of the earlier `gap`
-     shorthand without disturbing it; row 1 stays put and row 2 (edu/kit)
-     is what actually moves, since grid tracks size from the top down and a
-     bigger gap only pushes the track that comes after it. */
-  html.book-active .grid--about{row-gap:35px}
-
-  .grid--music{grid-template-columns:repeat(6,1fr);align-items:start}
-  .paper--releases{grid-column:span 3}
-  .paper--scores{grid-column:span 3}
-  .paper--parody{grid-column:span 3}
-  .paper--demos{grid-column:span 3}
-  .paper--social{grid-column:span 6}
+  /* .grid--about, .grid--music (their 6-col span layouts), .grid--projects
+     and .grid--contact all switch on at the 700px tablet floor above — this
+     block is only what needs the extra ~120px past that. */
   .social__row{
     display:grid;grid-template-columns:auto minmax(0,1fr) auto;
     align-items:center;gap:26px;
@@ -1807,10 +1943,6 @@ html.book-active .leaf:not(.is-current) .deco-dots__dot{
     gap:22px;align-items:center;
   }
   .paper--beam .beam{margin:0}
-
-  .grid--projects{grid-template-columns:repeat(2,1fr)}
-
-  .grid--contact{grid-template-columns:1fr 1.15fr;align-items:start}
 
   .resume__pdf{display:block}
   .resume__fallback{display:none}
@@ -1838,6 +1970,18 @@ html.book-active .leaf:not(.is-current) .deco-dots__dot{
    ============================================================ */
 .leaf__scroll{position:relative}
 .deco-layer,.deco--clip,.deco--header,.deco-placeholder{display:none}
+/* three small stars, used inline beside a header's note text — a small
+   permanent header accent, not part of the ambient layer above, so unlike
+   it this stays on below 900px too (see the note above the ambient block
+   for why .deco--stars3 originally ended up gated the same way by mistake:
+   every one of its sizing/color/animation rules used to live only inside
+   that >=900px block, so below it the SVGs fell back to unstyled default
+   sizing — a default-sized, unstyled, black, ~330x110px star cluster). */
+.deco--stars3{width:56px;height:18px;flex:none}
+.deco--stars3--b{transform:rotate(-6deg)}
+.deco-s3__star{color:var(--gold);fill:currentColor;opacity:0;animation:twinkle 4.4s ease-in-out infinite}
+.deco-s3__star--2{animation-delay:1.3s}
+.deco-s3__star--3{animation-delay:2.6s}
 
 @media (min-width:900px){
 
@@ -1864,14 +2008,6 @@ html.book-active .leaf:not(.is-current) .deco-dots__dot{
 }
 .leaf.is-open .deco{opacity:1;translate:0 0}
 .deco svg{display:block;overflow:visible;fill:currentColor}
-
-/* ---------- shared bits reused across pages ---------- */
-/* three small stars, used inline beside a header's note text */
-.deco--stars3{width:56px;height:18px;flex:none}
-.deco--stars3--b{transform:rotate(-6deg)}
-.deco-s3__star{color:var(--gold);fill:currentColor;opacity:0;animation:twinkle 4.4s ease-in-out infinite}
-.deco-s3__star--2{animation-delay:1.3s}
-.deco-s3__star--3{animation-delay:2.6s}
 
 /* header-slot placement: pushed to the far right of .spread__head, which is
    itself align-items:flex-end — align-self reinforces that so a short icon
