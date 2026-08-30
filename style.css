@@ -1456,11 +1456,70 @@ html.book-active .leaf__scroll{
    browser's native scroll while leaving horizontal drags free for the
    swipe-to-turn gesture in script.js (bindSwipe); overscroll-behavior stops
    a scroll at the top/bottom of a page from chaining into a pull-to-refresh
-   or bouncing the body underneath. */
-@media (max-width:699px), (max-height:480px){
+   or bouncing the body underneath.
+   Extended up through 1059px (not just <=699) across two separate causes,
+   both confirmed by measuring actual scrollHeight/clientHeight at every
+   width, not assumed:
+     - 700-819px: hero/research/projects keep their 2-column layout gated
+       to the 820px desktop floor (they need the extra width to look
+       right), so this range renders them single-column — 200-460px taller
+       than a 900px-tall viewport, well past what the fit-model's clamps
+       can shrink away.
+     - 900-1059px: projects specifically. .grid--projects is 2 columns
+       until the 1060px floor (3 columns), and 3 real cards in 2 columns
+       means a 2nd row holding one full card plus the "more in the works"
+       placeholder — that 2nd row's natural content height (driven by the
+       card, not the placeholder) is 90-115px taller than fits. .grid has
+       no align-items, so the placeholder also stretches to match the row
+       (harmless — it's decorative, aria-hidden), but shrinking it back to
+       its own min-height doesn't change the row's height, since that's set
+       by the real card, not the placeholder.
+   Either way this is the exact same "allow scroll rather than silently
+   clip" rule as above, just covering the width ranges where it was still
+   possible to overflow. Above 1059px every leaf fits with room to spare
+   (verified: zero overflow from 1060px up, where projects also gets its
+   3rd column), so this is a true no-op there — enabling overflow-y:auto on
+   a box that doesn't overflow shows no scrollbar and changes nothing.
+
+   The max-height term is 780px, not the original 480px: that 480 figure
+   was calibrated for phone landscape, but a wide, genuinely short WINDOW
+   (a laptop resized to half-height, a browser docked to a corner) is a
+   completely different, common case the fit-model's min(vw,vh) clamps were
+   specifically designed to absorb (see that block's own comment) — and
+   measurably don't, at any width up to 3440px tested:
+     height 480 -> up to 207px clipped   height 700 -> scrollHeight fits,
+     height 650 -> up to  37px clipped   BUT the last element still sits
+     height 600 -> up to  87px clipped   up to 34px INTO the floating pill
+   That last line is why this is 780, not the 699 where scrollHeight first
+   matches clientHeight: fitting its own box and clearing the floating pill
+   (position:absolute, doesn't scroll with the leaf) are different things.
+   Right around the point where the fit-model's vh-based clamps finish
+   shrinking padding to exactly match the available height, that padding is
+   thinner than the pill's own footprint, so content can "fit" while still
+   sitting under the pill. 780px is the first height, at every width tested,
+   where the last element clears the pill with the fit-model's own padding
+   alone (measured 0 to -190px of clearance from 780px up) — confirmed, not
+   assumed, same as the 1059px width figure above. */
+@media (max-width:1059px), (max-height:780px){
   html.book-active .leaf__scroll{
     overflow-y:auto;-webkit-overflow-scrolling:touch;
     overscroll-behavior:contain;touch-action:pan-y;
+  }
+}
+/* The desktop-style floating prev/next pill (position:absolute inside
+   .book, NOT inside .leaf__scroll) doesn't move when the leaf scrolls —
+   scrolled fully to the bottom, the last row lands exactly at the leaf's
+   visible edge, which is where the pill already sits. Its footprint is the
+   same 60.9px (from the book's own bottom edge to the pill's top) at every
+   width tested from 700 to 1920px, so one flat value covers the whole
+   scrollable range above, both the width-driven case (700-1059px) and the
+   short-window case (any width, height<=780px) — hence matching this
+   rule's condition to the one above rather than just the width slice.
+   At heights/widths where nothing overflows this is a no-op (verified
+   above), so true desktop at its normal height stays pixel-identical. */
+@media (min-width:700px) and (max-width:1059px), (max-height:780px){
+  html.book-active .leaf__scroll{
+    padding-bottom:76px;
   }
 }
 
@@ -1537,10 +1596,6 @@ html.book-active .line .leaf__scroll{
 html.book-active .line .line__h{align-self:end}
 html.book-active .line .footer{align-self:start}
 
-/* padding-top here is the gap between the polaroid frame and "nice to meet
-   u" below. */
-/* was clamp(55px,4vh,44px) — min > max, so it collapsed to a constant 55px
-   and the vh term never applied. Ordered correctly it now actually responds. */
 /* .peg's translateY(var(--y)) sway offset (10-24px per peg, for the
    clothesline stagger) is a transform — it paints the polaroid lower than
    its actual layout box, but doesn't add to that box's height, so
@@ -1763,11 +1818,21 @@ html.book-active .leaf:not(.is-current) .deco-dots__dot{
   }
 
   /* room at the bottom of every page for the fixed prev/next bar below,
-     plus the home-indicator inset on notched phones */
-  html.book-active .hero,
-  html.book-active .spread,
-  html.book-active .line{
-    padding-bottom:calc(76px + env(safe-area-inset-bottom));
+     plus the home-indicator inset on notched phones.
+     This has to live on .leaf__scroll itself, not on .hero/.spread/.line —
+     those ARE the .leaf elements, and .leaf__scroll is absolutely
+     positioned with inset:0 against them, which resolves against their
+     padding box (covers the padding area) rather than being inset by it.
+     Padding on the leaf is therefore inert; .leaf__scroll is the actual
+     scrolling box, so its own padding is what scrollHeight — and so
+     reachability — is measured against.
+     Side padding rides along here for the same reason: the leaf's own
+     20px horizontal padding (from .hero/.spread/.line, shared with
+     desktop/tablet) is equally swallowed, leaving cards ~9px from the
+     screen edge on phone. Scoped to this phone tier only so desktop/tablet
+     stay exactly as they were. */
+  html.book-active .leaf__scroll{
+    padding:0 16px calc(76px + env(safe-area-inset-bottom));
   }
 
   /* a soft fade at the bottom edge of each page hints there's more to

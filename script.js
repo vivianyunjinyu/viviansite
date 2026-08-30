@@ -9,9 +9,6 @@
   var root = doc.documentElement;
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  // touch/pen — used to shrink the page-turn drag threshold (dragMove below)
-  // and to gate the anywhere-swipe gesture to non-mouse pointers
-  var coarsePointer = window.matchMedia('(pointer: coarse)').matches;
 
   /* ---------------------------------------------------------
      0 · tiny helpers
@@ -71,8 +68,18 @@
     function update() {
       scrollEl.classList.toggle('is-scrollable', scrollEl.scrollWidth > scrollEl.clientWidth + 1);
     }
+    // update() forces a layout read (scrollWidth/clientWidth) — resize
+    // fires continuously during a window drag or (on iOS Safari) the
+    // momentum scroll that collapses/expands the URL bar, so coalesce to
+    // one read per animation frame rather than one per event
+    var pending = false;
+    function schedule() {
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(function () { pending = false; update(); });
+    }
     update();
-    window.addEventListener('resize', update);
+    window.addEventListener('resize', schedule);
     // the tab labels are set in the hand/body webfont, which swaps in
     // asynchronously after first paint — re-measure once it's actually
     // loaded so an initial fallback-font measurement can't leave the class
@@ -150,6 +157,13 @@
     var TIME_FOR_LEAF = ['day', 'day', 'midday', 'midday', 'dusk', 'dusk', 'night', 'night'];
     var THEME_COLOR   = ['#dceaf7', '#dceaf7', '#bfe3f7', '#bfe3f7', '#f4b483', '#f4b483', '#0b1730', '#0b1730'];
     var CONTACT_LEAF  = 6;
+    // which nav tab owns each leaf. Music is one SECTION spanning two
+    // leaves (4 "#music", 5 "#music2") but has only one tab, so comparing
+    // HASH_TO_LEAF[id] === cur directly left every tab dark on leaf 5. The
+    // cover (0) and crochet closer (7) have no tab of their own either —
+    // crochet inherits "contact" (the section it's the back cover of) so
+    // the bar doesn't go blank there too; the cover stays null, unchanged.
+    var TAB_FOR_LEAF  = [null, 'about', 'research', 'projects', 'music', 'music', 'contact', 'contact'];
 
     function initialLeaf() {
       var h = (location.hash || '').replace('#', '');
@@ -347,9 +361,10 @@
     }
 
     function updateTabs(cur) {
+      var section = TAB_FOR_LEAF[cur];
       tabs.forEach(function (tab) {
         var id = (tab.getAttribute('href') || '').replace('#', '');
-        var on = HASH_TO_LEAF[id] === cur;
+        var on = id === section;
         tab.classList.toggle('is-active', on);
         if (on) tab.setAttribute('aria-current', 'true');
         else tab.removeAttribute('aria-current');
@@ -666,7 +681,7 @@
     }
 
     /* ---- corner drag / swipe ---- */
-    var drag = { active: false, dir: 0, moving: null, startX: 0, ratio: 0 };
+    var drag = { active: false, dir: 0, moving: null, startX: 0, ratio: 0, pointerType: '' };
 
     function dragStart(e, dir, startX) {
       var atEdge = (dir === 1 && current === total - 1) || (dir === -1 && current === 0);
@@ -694,6 +709,11 @@
       drag.dir = dir;
       drag.startX = startX !== undefined ? startX : e.clientX;
       drag.ratio = 0;
+      // captured per-gesture rather than read once from matchMedia at load
+      // — a hybrid/2-in-1 device can switch input mid-session (detach a
+      // keyboard, pick up a finger), and this way each drag gets the right
+      // throw distance regardless of what was active when the page loaded
+      drag.pointerType = e.pointerType || '';
       drag.moving = leaf;
       drag.moving.classList.add('is-dragging');
       doc.addEventListener('pointermove', dragMove, { passive: true });
@@ -705,9 +725,10 @@
       var dx = e.clientX - drag.startX;
       var w = window.innerWidth || 1;
       // full-width corner drags stay proportional to the viewport; a coarse
-      // (touch) pointer gets a flat, shorter throw so an ordinary thumb
+      // (touch/pen) pointer gets a flat, shorter throw so an ordinary thumb
       // swipe is enough to commit a turn
-      var span = coarsePointer ? Math.min(w * 0.35, 180) : w * 0.55;
+      var coarse = drag.pointerType === 'touch' || drag.pointerType === 'pen';
+      var span = coarse ? Math.min(w * 0.35, 180) : w * 0.55;
       var t = Math.max(0, Math.min(1, (drag.dir === 1 ? -dx : dx) / span));
       drag.ratio = t;
       var angle = drag.dir === 1 ? -180 * t : -180 * (1 - t);
@@ -997,6 +1018,18 @@
       entry.row.classList.add('is-paused');
     }
 
+    // shared by the <audio> "error" event (bad/missing file) and a rejected
+    // play() (autoplay policy, decode failure, etc.) — same dead end either
+    // way, so both go through one reset rather than two copies drifting apart
+    function markMissing(entry) {
+      entry.row.classList.add('is-missing');
+      entry.row.classList.remove('is-playing', 'is-paused');
+      entry.btn.setAttribute('aria-disabled', 'true');
+      entry.btn.title = 'audio coming soon';
+      if (current === entry) current = null;
+      syncAudioClass();
+    }
+
     function load(entry) {
       var audio = new Audio();
       audio.preload = 'none';
@@ -1013,14 +1046,7 @@
         syncAudioClass();
       });
       // no file uploaded yet, or a bad path: say so rather than failing silently
-      audio.addEventListener('error', function () {
-        entry.row.classList.add('is-missing');
-        entry.row.classList.remove('is-playing', 'is-paused');
-        entry.btn.setAttribute('aria-disabled', 'true');
-        entry.btn.title = 'audio coming soon';
-        if (current === entry) current = null;
-        syncAudioClass();
-      });
+      audio.addEventListener('error', function () { markMissing(entry); });
 
       entry.audio = audio;
       return audio;
@@ -1043,14 +1069,28 @@
 
         if (current && current !== entry) stop(current);   // only one at a time
 
+        // play() returns a promise almost everywhere now (older WebViews are
+        // the exception, hence the `started.then` guard) — the "playing"
+        // state must wait for it to resolve, not apply optimistically: a
+        // rejected play (autoplay policy, decode failure) previously left
+        // the row showing a pause icon and a frozen progress bar forever,
+        // since is-missing's early-return above blocks all future clicks.
         var started = entry.audio.play();
-        if (started && started.catch) {
-          started.catch(function () { row.classList.add('is-missing'); syncAudioClass(); });
+        if (started && started.then) {
+          started.then(function () {
+            row.classList.add('is-playing');
+            row.classList.remove('is-paused');
+            current = entry;
+            syncAudioClass();
+          }, function () {
+            markMissing(entry);
+          });
+        } else {
+          row.classList.add('is-playing');
+          row.classList.remove('is-paused');
+          current = entry;
+          syncAudioClass();
         }
-        row.classList.add('is-playing');
-        row.classList.remove('is-paused');
-        current = entry;
-        syncAudioClass();
       });
     });
   }());
