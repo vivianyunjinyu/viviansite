@@ -1446,10 +1446,17 @@ html.book-active .leaf__scroll{
   position:absolute;inset:0;overflow:hidden;
   perspective:1600px;
 }
-/* Below the guaranteed-fit floor (phone landscape, roughly) the fluid scale
-   above has run out of room, and shrinking further would cross into
-   unreadable. Allow scrolling there rather than silently clipping the bottom
-   of the page off — losing content is worse than a scrollbar.
+/* Below the guaranteed-fit floor the fluid scale above has run out of room,
+   and shrinking further would cross into unreadable. Allow scrolling there
+   rather than silently clipping the bottom of the page off — losing content
+   is worse than a scrollbar.
+   PORTRAIT ONLY (see the `and (orientation:portrait)` on every branch
+   below): a tall page scrolling in portrait is normal and expected. In
+   landscape a scrollbar isn't wanted at all — the `@media (orientation:
+   landscape)` block further down (search "LANDSCAPE") is the real fix for
+   that orientation: earlier multi-column breakpoints plus harder
+   height-driven compression, tuned until every leaf provably fits with no
+   scroll, rather than falling back to one here.
    Phone tier (<=699px) opts out of the one-screen fit model entirely (see
    the phone-tier block further down), so it gets the same scrolling leaf
    regardless of height. touch-action:pan-y hands vertical drags to the
@@ -1499,8 +1506,22 @@ html.book-active .leaf__scroll{
    sitting under the pill. 780px is the first height, at every width tested,
    where the last element clears the pill with the fit-model's own padding
    alone (measured 0 to -190px of clearance from 780px up) — confirmed, not
-   assumed, same as the 1059px width figure above. */
-@media (max-width:1059px), (max-height:780px){
+   assumed, same as the 1059px width figure above.
+
+   The <=480px branch below is NOT portrait-only, unlike the other two — it's
+   the original floor this whole rule started from, and it stays universal
+   on purpose. The LANDSCAPE block's compression closes the gap cleanly from
+   roughly 650-700px tall up, and does real work below that, but a landscape
+   PHONE (390-430px tall) is a genuinely common device orientation, not an
+   edge case, and there is simply not enough vertical room left at that
+   height for every page's full text content at a readable size, no matter
+   how hard the spacing is compressed — measured up to 388px still
+   unreachable at 844x390 with scrolling removed. Below 480px tall, in
+   EITHER orientation, losing content off the bottom of the screen is worse
+   than a scrollbar, same reasoning as the original design's own floor. */
+@media (max-height:480px),
+       (max-width:1059px) and (orientation:portrait),
+       (max-height:780px) and (orientation:portrait){
   html.book-active .leaf__scroll{
     overflow-y:auto;-webkit-overflow-scrolling:touch;
     overscroll-behavior:contain;touch-action:pan-y;
@@ -1516,8 +1537,13 @@ html.book-active .leaf__scroll{
    short-window case (any width, height<=780px) — hence matching this
    rule's condition to the one above rather than just the width slice.
    At heights/widths where nothing overflows this is a no-op (verified
-   above), so true desktop at its normal height stays pixel-identical. */
-@media (min-width:700px) and (max-width:1059px), (max-height:780px){
+   above), so true desktop at its normal height stays pixel-identical.
+   The <=480px branch matches the universal (any-orientation) branch of the
+   overflow-enabling rule above, for the same reason: a landscape phone
+   still needs its scrolled-to-bottom content clear of the pill. */
+@media (max-height:480px),
+       (min-width:700px) and (max-width:1059px) and (orientation:portrait),
+       (max-height:780px) and (orientation:portrait){
   html.book-active .leaf__scroll{
     padding-bottom:76px;
   }
@@ -2039,6 +2065,112 @@ html.book-active .leaf:not(.is-current) .deco-dots__dot{
   .card__art{height:150px}
 }
 
+/* ============================================================
+   LANDSCAPE — earlier multi-column breakpoints
+   Portrait's scroll safety-net is now portrait-only (see the comment
+   above @media (max-width:1059px) and (orientation:portrait) further up):
+   landscape has to actually fit, not scroll. Hero/research only going
+   2-column at the 820px desktop floor, and projects only going 3-column at
+   1060px, is fine in portrait (there's vertical room to spare below those
+   widths) but leaves a landscape window that's 700-1059px wide sitting in
+   single/2-column layouts 200-460px taller than it needs to be — entirely
+   avoidable by turning the multi-column layout on sooner, since landscape
+   by definition already has the width to spare that portrait doesn't.
+   These are pure duplicates of the relevant rules from the min-width:820px
+   and min-width:1060px blocks above, just gated earlier + to landscape
+   only — portrait keeps exactly the widths it already had. ============ */
+@media (orientation:landscape) and (min-width:700px){
+  .hero__inner{grid-template-columns:1.12fr .88fr;align-items:center}
+  html.book-active .hero__inner{
+    grid-template-columns:minmax(0,560px) minmax(0,auto);
+    justify-content:center;
+  }
+  .hero__right{justify-items:end}
+
+  .grid--research{grid-template-columns:1.55fr 1fr;align-items:start}
+  .paper--fig{margin-left:7%}
+  .paper--terms{margin-right:6%}
+  .paper--beam{
+    display:grid;grid-template-columns:minmax(0,1fr) 232px;
+    gap:22px;align-items:center;
+  }
+  .paper--beam .beam{margin:0}
+}
+/* projects: 3 real cards in 2 columns leaves a partial 2nd row (one card +
+   the decorative "more in the works" placeholder) that's 90-115px taller
+   than fits in that gap (see the audit note above) — 3 columns removes the
+   partial row entirely instead of needing extra vertical room for it. Not
+   bumping .card__art's height here (unlike the 1060px desktop rule) since
+   the goal is less height, not the wider layout's more spacious art. */
+@media (orientation:landscape) and (min-width:700px){
+  /* 3 columns even this early (narrower than the 900px+ used for
+     everything else that goes 3-up) still roughly halves this page's
+     overflow at short heights compared to 2 columns leaving a partial
+     2nd row of full-height cards — confirmed by measurement at 700/800px,
+     where 2-col overflowed 456-546px and 3-col cut that to 191-257px. */
+  .grid--projects{grid-template-columns:repeat(3,1fr)}
+}
+
+/* Earlier multi-column breakpoints above close most of the gap, but at
+   genuinely short heights even 2-3 columns doesn't fully close it —
+   text-heavy pages (research's "where i am right now" card runs 400px+ of
+   paragraph/bullet content on its own) need the actual spacing/type scale
+   tightened, not just a better column count. Every value below only
+   tightens the FLOOR of an existing clamp (or adds a height term to a rule
+   that didn't have one), so nothing changes at a comfortable landscape
+   height — only a short one — and portrait (none of this is re-declared
+   there) is completely unaffected. */
+@media (orientation:landscape){
+  html.book-active body{line-height:1.3}
+  html.book-active p{margin:0 0 .35em}
+  html.book-active .hero{padding:clamp(6px,min(3vw,2vh),32px) 20px clamp(8px,min(3vw,2vh),32px)}
+  html.book-active .spread{padding:clamp(4px,min(1.2vw,.9vh),14px) 20px clamp(8px,min(2.6vw,1.8vh),30px)}
+  html.book-active .spread__head{margin-bottom:clamp(6px,2.4vh,38px);gap:min(6px,1vh)}
+  html.book-active .spread__intro{margin-bottom:clamp(4px,min(1.8vw,1.2vh),18px)}
+  html.book-active .grid,
+  html.book-active .research__col{gap:clamp(3px,min(.7vw,.7vh),10px)}
+  html.book-active .paper,
+  html.book-active .card,
+  html.book-active .indexcard{padding:clamp(3px,.7vh,10px) clamp(7px,1.1vw,14px)}
+  html.book-active .spread__title{font-size:clamp(1rem,min(3.6vw,3.6vh),2.05rem)}
+  html.book-active .hero__name{font-size:clamp(1.3rem,min(6vw,5.5vh),3.1rem)}
+  html.book-active .paper__h{font-size:clamp(.9rem,min(1.18rem,1.7vh),1.18rem)}
+  html.book-active .bujo li{padding:2px 0 2px 26px}
+  html.book-active .entry__sub{margin:.1em 0 .2em}
+  html.book-active .entry + .entry{margin-top:3px;padding-top:3px}
+  /* .footer's top padding was a flat 40px with no height term at all —
+     the crochet leaf (leaf7) is otherwise unscrollable in landscape now,
+     same as everywhere else. .line's own bottom padding was width-only
+     (3vw), so a wide-but-short landscape window got full-width padding
+     regardless of how little height was actually available. */
+  html.book-active .footer{padding:clamp(12px,4vh,40px) 20px clamp(16px,min(6.5vw,4vh),72px)}
+  html.book-active .line{padding:clamp(8px,4vh,44px) 20px clamp(12px,min(3vw,3vh),32px)}
+  html.book-active .line__h{margin-bottom:clamp(8px,4vh,38px)}
+
+  /* research's "where i am right now" card (.paper--lab) is the single
+     tallest thing on any page — a bio paragraph plus a sub-project block
+     with 3 bullet points — and its own column gap and internal spacing
+     were width-only (2.6vw) or flat, so a short-but-wide landscape window
+     got none of the compression above. */
+  html.book-active .research__col{gap:clamp(6px,min(2.6vw,1.4vh),30px)}
+  html.book-active .proj{margin:4px 0 0;padding:4px 0 0}
+  html.book-active .proj__sub{margin:.1em 0 .25em}
+  html.book-active .margin-note--wide{padding:4px 10px 4px 30px;margin-top:.3em}
+
+  /* the résumé iframe was a flat 440px regardless of viewport height — on
+     a short landscape window that's most of the leaf's entire height on
+     its own, before anything else on the contact page. The polaroid photo
+     (aspect-ratio 4/5, sized purely by width — min(210px,50vw)) has the
+     same problem in reverse: shrinking width alone does nothing on a wide
+     landscape window, so it stayed full-size while everything around it
+     compressed. */
+  html.book-active .resume__pdf{height:clamp(160px,45vh,440px)}
+  html.book-active .polaroid__frame{width:min(210px,50vw,34vh)}
+  html.book-active .indexcard{padding:8px 14px 6px}
+  html.book-active .indexcard__list a{padding:2px 2px}
+  html.book-active .indexcard__h{margin-bottom:0}
+}
+
 
 /* ============================================================
    page decorations — ambient sky/music/EE/craft accents that
@@ -2342,6 +2474,17 @@ html.book-active .leaf:not(.is-current) .deco-dots__dot{
 
 /* projects placeholder card only makes sense while the row is 2-up (900–1059px) */
 @media (min-width:1060px){
+  .deco-placeholder{display:none}
+}
+/* landscape gets 3 columns starting at 900px (see the earlier-breakpoints
+   block above, "min-width:900px" under LANDSCAPE) instead of waiting for
+   1060px — 3 real cards exactly fill that grid, so the placeholder has to
+   go from the same width, not just 1060px+, or it wraps to a solo 4th-item
+   row all by itself and adds back the ~220px this exists to remove.
+   This has to live down here, after the >=900px ambient-decoration block
+   above sets .deco-placeholder{display:flex} — an earlier override in the
+   file loses the cascade to that later, equal-specificity rule. */
+@media (orientation:landscape) and (min-width:700px){
   .deco-placeholder{display:none}
 }
 
