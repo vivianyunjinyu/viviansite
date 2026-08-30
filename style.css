@@ -1665,6 +1665,23 @@ html.book-active .stat{margin-bottom:8px}
    calc(50vh - 330px) is 0 right at 660px and grows from there, instead of
    scaling from 0 at viewport height 0 like a bare vh value would. */
 html.book-active .paper--social{margin-top:clamp(0px,calc(50vh - 330px),130px)}
+/* That clamp's 130px ceiling was calibrated for typical laptop/desktop
+   heights (under ~900px), where it either stays well under the ceiling or
+   only just reaches it. iPads run far taller than that at both common
+   orientations — portrait is 1024-1366px tall, landscape (11"/12.9" Pro)
+   is still 834-1024px — so on real iPad hardware this pins at 130px and
+   shoves "where the songs go" a full ~130px below the row above it, with
+   a matching dead gap left above it, which reads as the whole page being
+   pushed down and off-balance. Confirmed at every current iPad size,
+   portrait and landscape (768x1024 up to 1366x1024); zeroing it out
+   there looks identical to how the phone-tier override below already
+   handles the same overshoot at narrower widths.
+   Capped at 1366px — the widest real iPad (12.9" Pro, landscape) — so
+   this doesn't touch actual desktop windows, which start at 1440px
+   everywhere else in this file. */
+@media (min-width:700px) and (max-width:1366px){
+  html.book-active .paper--social{margin-top:0}
+}
 html.book-active .linkrow{margin-bottom:8px}
 html.book-active .ee{margin:6px auto 0;max-width:340px}
 html.book-active .resume__pdf{height:440px}
