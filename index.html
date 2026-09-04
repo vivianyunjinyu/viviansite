@@ -214,6 +214,15 @@
        purely by CSS (see the phone-tier block in style.css) — no JS. -->
   <p class="hero__navhint--touch">swipe left or right to turn pages</p>
 </div>
+<!-- phone-only: this page can scroll on phone (see the phone-tier block in
+     style.css), which isn't obvious from a static screen. Floats over the
+     leaf regardless of scroll position (it's a sibling of .leaf__scroll, not
+     inside it) and script.js hides it for good the first time the user
+     actually scrolls. -->
+<div class="scrolldown" aria-hidden="true">
+  <span>scroll down!</span>
+  <svg viewBox="0 0 24 24"><path d="M12 3v16M5 12l7 8 7-8" /></svg>
+</div>
 </section>
 
 

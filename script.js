@@ -956,6 +956,22 @@
 
 
   /* ---------------------------------------------------------
+     3.6 · phone: "scroll down!" hint on the hero page
+     Hidden by CSS everywhere except the phone-portrait book tier (see
+     .scrolldown in style.css) — only there does .leaf__scroll actually
+     scroll, so this listener is a no-op everywhere else.
+     --------------------------------------------------------- */
+  (function scrollDownHint() {
+    var heroScroll = $('.leaf[data-leaf="0"] .leaf__scroll');
+    var hint = $('.leaf[data-leaf="0"] .scrolldown');
+    if (!heroScroll || !hint) return;
+    heroScroll.addEventListener('scroll', function () {
+      if (heroScroll.scrollTop > 8) hint.classList.add('is-hidden');
+    }, { passive: true });
+  }());
+
+
+  /* ---------------------------------------------------------
      4 · clickable bullet-journal checkboxes
      --------------------------------------------------------- */
   $$('.bujo[data-checkable] li').forEach(function (li) {

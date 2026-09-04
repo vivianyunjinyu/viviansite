@@ -554,6 +554,35 @@ html[data-time="night"] .hero__navhint{color:var(--ink-2)}
 }
 html[data-time="night"] .hero__navhint--touch{color:var(--ink-2)}
 
+/* phone-only "scroll down!" hint — see the comment on .scrolldown in
+   index.html. Off everywhere else; only the phone-portrait book tier turns
+   it on, since that's the only tier where .leaf__scroll actually scrolls
+   short enough for this to matter (see the phone-tier block further down). */
+.scrolldown{display:none}
+@media (max-width:699px) and (orientation:portrait){
+  html.book-active .scrolldown{
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    position:absolute;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));
+    transform:translateX(-50%);
+    font-family:var(--f-hand);font-size:1rem;color:var(--blue-deep);
+    pointer-events:none;z-index:5;
+    /* a translucent chip, not bare text — this floats at a fixed spot while
+       the page scrolls underneath it, so whatever photo or card happens to
+       land there must not swallow it */
+    background:color-mix(in srgb,var(--paper) 88%,transparent);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    border:1.5px solid var(--edge);border-radius:16px;
+    padding:8px 16px;box-shadow:var(--shadow);
+    animation:bob 2.6s ease-in-out infinite;
+    transition:opacity .3s var(--ease);
+  }
+  html.book-active .scrolldown svg{
+    width:22px;height:22px;fill:none;stroke:currentColor;
+    stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;opacity:.85;
+  }
+  html.book-active .scrolldown.is-hidden{opacity:0}
+}
+
 /* ============================================================
    spreads
    ============================================================ */
