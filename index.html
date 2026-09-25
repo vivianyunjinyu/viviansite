@@ -431,34 +431,45 @@
         <div class="beam__text">
           <h3 class="paper__h">up next</h3>
           <div class="proj__top">
-            <h4 class="entry__title beam__title">adaptive soundbeaming</h4>
+            <h4 class="entry__title beam__title">ML-personalized HRTFs from a photo</h4>
             <span class="stamp stamp--sm">ongoing</span>
           </div>
           <p class="beam__body">
-            Soundbeaming steers a narrow column of sound out of a speaker array so it reaches one
-            listener instead of filling the room. The adaptive part is the beam re-aiming itself
-            as that listener moves.
+            Measuring someone's HRTF usually means sitting in an anechoic chamber with microphones
+            in your ears. Instead, you snap a picture of your ear, the shape of it gets turned into
+            measurements, and Keras models trained on the CIPIC database generate an HRTF
+            personalized to you.
           </p>
         </div>
 
-        <svg class="beam" viewBox="16 14 230 122" role="img"
-             aria-label="A speaker array steering a narrow beam of sound that tracks a moving listener.">
-          <g class="beam__array">
-            <rect x="22" y="52" width="17" height="46" rx="5"/>
-            <circle cx="30.5" cy="63" r="3.4"/>
-            <circle cx="30.5" cy="75" r="3.4"/>
-            <circle cx="30.5" cy="87" r="3.4"/>
+        <svg class="beam hml" viewBox="4 20 236 86" role="img"
+             aria-label="A photo of an ear is scanned, passed through a small neural network, and turned into a personalized HRTF frequency curve.">
+          <rect class="hml__frame" x="10" y="24" width="58" height="76" rx="6"/>
+          <path class="hml__finder" d="M15 35v-6h6M57 29h6v6M63 89v6h-6M21 95h-6v-6"/>
+          <path class="hml__ear" d="M36 36c10-3 20 4 20 16 0 7-4 10-6 15-2 4-1 9-4 13-3 5-10 5-12 0-1-3 1-6 0-9-2-4-7-7-7-15 0-10 3-18 9-20z"/>
+          <path class="hml__ear hml__ear--in" d="M39 43c6 0 10 5 9 11-1 4-4 6-4 10M35 58c2-3 6-2 6 2"/>
+          <circle class="hml__pt" cx="47" cy="40" r="2"/>
+          <circle class="hml__pt" cx="54" cy="57" r="2"/>
+          <circle class="hml__pt" cx="38" cy="80" r="2"/>
+          <rect class="hml__scan" x="14" y="29" width="50" height="2" rx="1"/>
+
+          <path class="hml__flow" d="M72 62h12M156 62h10"/>
+
+          <path class="hml__edge" d="M92 44L120 36M92 44L120 54M92 44L120 72M92 44L120 90M92 62L120 36M92 62L120 54M92 62L120 72M92 62L120 90M92 80L120 36M92 80L120 54M92 80L120 72M92 80L120 90M120 36L148 44M120 36L148 62M120 36L148 80M120 54L148 44M120 54L148 62M120 54L148 80M120 72L148 44M120 72L148 62M120 72L148 80M120 90L148 44M120 90L148 62M120 90L148 80"/>
+          <g class="hml__layer">
+            <circle cx="92" cy="44" r="4.2"/><circle cx="92" cy="62" r="4.2"/><circle cx="92" cy="80" r="4.2"/>
           </g>
-          <g class="beam__cone">
-            <path class="beam__lobe" d="M40 75L216 53v44z"/>
-            <path class="beam__wave" d="M90 69a50 50 0 010 12"/>
-            <path class="beam__wave" d="M135 63a95 95 0 010 24"/>
-            <path class="beam__wave" d="M180 58a140 140 0 010 34"/>
+          <g class="hml__layer">
+            <circle cx="120" cy="36" r="4.2"/><circle cx="120" cy="54" r="4.2"/><circle cx="120" cy="72" r="4.2"/><circle cx="120" cy="90" r="4.2"/>
           </g>
-          <g class="beam__listener">
-            <circle cx="216" cy="57" r="10.5"/>
-            <path d="M216 71c-11.5 0-20.5 9.2-20.5 20.6V99h41v-7.4C236.5 80.2 227.5 71 216 71z"/>
+          <g class="hml__layer">
+            <circle cx="148" cy="44" r="4.2"/><circle cx="148" cy="62" r="4.2"/><circle cx="148" cy="80" r="4.2"/>
           </g>
+
+          <path class="hml__axis" d="M170 30v66h66"/>
+          <path class="hml__curve" pathLength="100"
+                d="M172 62C178 60 182 50 188 50S196 60 200 60S204 54 207 54S211 86 214 86S219 66 223 64S230 70 234 72"/>
+          <circle class="hml__notch" cx="214" cy="86" r="3.2"/>
         </svg>
       </article>
 
@@ -559,7 +570,7 @@
 </div>
   <div class="spread__head reveal">
     <span class="spread__num">03</span>
-    <h2 class="spread__title" id="projectsH">projects
+    <h2 class="spread__title" id="projectsH">recent projects
       <svg class="uline" viewBox="0 0 300 18" preserveAspectRatio="none"><path d="M3 12c52-9 104-9 154-5 42 3 84 6 140-2"/></svg>
     </h2>
     <span class="spread__note">built &amp; shipped</span>
@@ -569,7 +580,6 @@
 
     <article class="card reveal" data-tilt>
       <div class="tape tape--tc"></div>
-      <span class="card__badge card__badge--wip">in progress</span>
 
       <div class="card__art card__art--theremin" aria-hidden="true">
         <!-- `meet`, not `slice`: the art must survive .card__art being made
