@@ -1225,7 +1225,6 @@ html[data-time="night"] .vo-cap-c{fill:#0f1e33;opacity:.7}
 
 /* ---------- contact ---------- */
 .paper--say{--tilt:-.8deg}
-.paper--resume{--tilt:.6deg}
 
 .mailbtn{
   display:block;width:100%;text-align:left;margin:16px 0 18px;
@@ -1251,32 +1250,11 @@ html[data-time="night"] .mailbtn__label{color:var(--blue)}
   font-family:var(--f-hand);font-size:1.2rem;color:var(--ink-2);margin-top:14px;
 }
 
-.resume__note{font-size:.88rem;color:var(--ink-2);margin:.6em 0 1em}
-.resume__frame{
-  position:relative;border-radius:12px;overflow:hidden;
-  border:1.5px solid var(--edge);background:#fff;
-  box-shadow:inset 0 2px 10px -6px rgba(20,55,90,.4);
-}
-.resume__pdf{display:none;width:100%;height:640px;border:0;background:#fff}
-.resume__fallback{
-  display:grid;place-items:center;min-height:280px;text-decoration:none;
-  background:repeating-linear-gradient(45deg,#f7fafd 0 12px,#eef4fa 12px 24px);
-}
-.resume__page{
-  display:grid;gap:4px;justify-items:center;text-align:center;
-  background:#fff;padding:26px 30px;border-radius:8px;
-  box-shadow:0 12px 30px -18px rgba(20,55,90,.6);border:1px solid #e2eaf2;
-  transform:rotate(-1.5deg);transition:transform .25s var(--ease);
-}
-.resume__fallback:hover .resume__page{transform:rotate(0) scale(1.03)}
-.resume__page b{font-size:1.02rem;color:#16324b}
-.resume__page i{font-family:var(--f-mono);font-style:normal;font-size:.68rem;color:#7d95ab}
-.resume__page em{font-style:normal;font-weight:800;font-size:.85rem;color:#2f6fa8;margin-top:8px}
 
 /* ============================================================
-   crochet washing line
+   crochet washing line (on the contact page)
    ============================================================ */
-.line{max-width:var(--maxw);margin:0 auto;padding:clamp(10px,2vw,20px) 20px clamp(30px,5vw,56px)}
+.crochet{margin-top:clamp(28px,5vw,48px)}
 .line__h{
   font-family:var(--f-hand);font-weight:700;letter-spacing:0;
   font-size:clamp(1.7rem,4.2vw,2.4rem);color:var(--ink);
@@ -1337,7 +1315,7 @@ html[data-time="night"] .peg__frame{background:#e9eef5}
 .footer{padding:clamp(30px,6vw,70px) 20px clamp(40px,7vw,80px)}
 .footer__inner{
   max-width:var(--maxw);margin:0 auto;text-align:center;
-  display:grid;gap:8px;justify-items:center;
+  display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center;justify-content:center;
 }
 .footer__sign{
   font-family:var(--f-hand);font-size:clamp(2rem,6vw,3rem);color:var(--ink);
@@ -1345,7 +1323,7 @@ html[data-time="night"] .peg__frame{background:#e9eef5}
 }
 html[data-time="night"] .footer__sign{text-shadow:0 2px 22px rgba(120,180,235,.2)}
 .totop{
-  margin-top:10px;padding:9px 18px;border-radius:999px;font-size:.82rem;font-weight:800;
+  padding:9px 18px;border-radius:999px;font-size:.82rem;font-weight:800;
   color:var(--blue-deep);background:color-mix(in srgb,var(--paper) 82%,transparent);
   border:1.5px solid var(--edge);box-shadow:var(--shadow);
   transition:transform .2s var(--ease);
@@ -1442,7 +1420,7 @@ html.book-active .book__stage{
 
 html.book-active .leaf{
   position:absolute;inset:0;
-  /* .hero/.spread/.line each carry their own max-width:var(--maxw);margin:0 auto
+  /* .hero/.spread each carry their own max-width:var(--maxw);margin:0 auto
      from the pre-book single-column layout — override it here so a leaf fills
      the full width .book gives it (the book fills the screen on any display).
      The 2-column pages (hero, research, contact) get their own narrower cap
@@ -1465,8 +1443,8 @@ html.book-active .leaf{
   background:var(--paper);border:1.5px solid var(--edge);
   border-radius:var(--r);box-shadow:var(--shadow-lg);
   overflow:hidden;
-  /* a style change inside one page (reveals popping in, the resume iframe
-     loading) shouldn't force layout/paint on the seven other stacked leaves */
+  /* a style change inside one page (reveals popping in, images
+     loading) shouldn't force layout/paint on the six other stacked leaves */
   contain:layout paint;
 }
 /* Exactly one leaf ever turns, so promoting it for the duration of the turn
@@ -1646,8 +1624,8 @@ html.book-active .spread__head{margin-bottom:clamp(10px,3.2vh,38px);gap:min(10px
 html.book-active .spread__intro{margin-bottom:clamp(6px,min(1.8vw,1.6vh),18px)}
 html.book-active .grid,
 html.book-active .research__col{gap:clamp(5px,min(.7vw,1vh),10px)}
-html.book-active .line{padding:clamp(16px,4vh,44px) 20px clamp(20px,3vw,32px)}
-html.book-active .line__h{margin-bottom:clamp(16px,4vh,38px)}
+html.book-active .crochet{margin-top:clamp(14px,3.4vh,40px)}
+html.book-active .line__h{margin-bottom:clamp(10px,2.6vh,28px)}
 html.book-active .line__wrap{padding-top:8px}
 /* On short viewports the cover's two helper hints are the cheapest things to
    give up: the scroll tip is actively misleading now that pages don't
@@ -1657,29 +1635,6 @@ html.book-active .line__wrap{padding-top:8px}
   html.book-active .hero__navhint,
   html.book-active .hero__navhint--touch{display:none}
 }
-/* The crochet leaf centres its POLAROID ROW on the page, not its content
-   block. Its three in-flow children are the heading, the polaroid row, and
-   the footer (the deco layer is position:absolute, so it sits outside this).
-   A 1fr/auto/1fr grid gives the two outer rows an identical share of the
-   free space, which puts the middle row — the polaroids — exactly on the
-   page's vertical centre at every viewport size. The heading then hangs off
-   the bottom of row 1 and the footer off the top of row 3, so both stay
-   attached to the photos instead of drifting.
-   This is why it's a grid rather than a centred flex column: flex would
-   centre the whole heading+photos+footer stack, and since the footer is much
-   taller than the heading that would leave the polaroids sitting well above
-   centre. Here the outer rows are equal by construction, so no pixel
-   compensation is needed and it stays correct as text sizes reflow.
-   Overflow-safe: `1fr` in grid is minmax(auto,1fr), so on a short viewport
-   the outer rows shrink only to their content and nothing is clipped —
-   which is what the previous `safe flex-end` was guarding against. */
-html.book-active .line .leaf__scroll{
-  display:grid;
-  grid-template-rows:1fr auto 1fr;
-}
-html.book-active .line .line__h{align-self:end}
-html.book-active .line .footer{align-self:start}
-
 /* .peg's translateY(var(--y)) sway offset (10-24px per peg, for the
    clothesline stagger) is a transform — it paints the polaroid lower than
    its actual layout box, but doesn't add to that box's height, so
@@ -1689,35 +1644,37 @@ html.book-active .line .footer{align-self:start}
    without this, the padding below is measured from the wrong place and the
    real gap ends up 24px smaller than intended. */
 html.book-active .line__pegs{padding-bottom:24px}
-/* Exact 40px from the lowest polaroid to "back to the cover": footer's
-   button is its only in-flow child now (the greeting lives in the corner,
-   see .line .footer__sign below), so this top padding IS that gap. Flat
-   40px rather than a clamp, per that exact request — .footer is unique to
-   this one leaf, so nothing else is affected by making it a fixed value. */
-html.book-active .footer{padding:40px 20px clamp(28px,min(6.5vw,6vh),72px)}
-html.book-active .footer__inner{gap:3px}
-html.book-active .footer__sign{font-size:clamp(1rem,min(2.6vw,2.4vh),1.5rem);margin-bottom:0}
-
-/* "nice to meet u :)" is lifted out of the centered footer stack and parked
-   in the page's lower-right corner. Absolute against .leaf__scroll (which is
-   position:relative) rather than .footer, so it's pinned to the PAGE corner
-   and not to wherever the footer block happens to end up — the crochet leaf
-   bottom-aligns its content, so the footer's own box moves with content
-   height while the corner does not.
-   The corner is free: every decoration on this leaf sits on the left
-   (left:4%/5%/8%), and the prev/next pill is centred, so nothing collides.
-   Scoped to html.book-active .line — the no-JS scrolling fallback keeps the
-   original centred footer, where there is no fixed-size page to have a
-   corner of. */
-html.book-active .line .footer__sign{
-  position:absolute;
-  right:clamp(18px,3.5vw,52px);
-  bottom:clamp(14px,2.6vh,30px);
-  margin:0;
-  text-align:right;
-  z-index:2;
+/* The contact page stacks card, crochet line and footer. The leaf is a
+   flex column so the crochet line takes the slack between the card and the
+   footer, and the footer sits at the page bottom, clear of the prev/next
+   pill that floats over the bottom-centre. */
+html.book-active .spread--contact .leaf__scroll{display:flex;flex-direction:column}
+/* auto side margins would otherwise shrink-wrap and centre each item */
+html.book-active .spread--contact .leaf__scroll > *{width:100%}
+html.book-active .spread--contact .crochet{margin-block:auto}
+/* polaroids are capped by viewport height too, so four of them plus the
+   contact card still fit on one screen; overrides the shared 1400px cap */
+html.book-active .line__wrap{max-width:calc(4 * min(230px,24vh) + 60px)}
+html.book-active .footer{padding:clamp(10px,2.4vh,28px) 20px clamp(58px,8vh,72px)}
+html.book-active .footer__sign{font-size:clamp(1.2rem,min(2.8vw,3vh),1.7rem)}
+html.book-active .totop{padding:7px 16px}
+/* Short windows (small laptops, browser chrome eating height) can't afford a
+   footer row stacked above the pill, so the footer splits around it instead:
+   greeting left, button right, both level with the pill. The dream cloud
+   gives up its corner to the greeting. */
+@media (min-width:700px) and (min-height:481px) and (max-height:760px){
+  html.book-active .spread--contact .footer{padding:4px 20px 18px}
+  html.book-active .spread--contact .footer__inner{max-width:900px;justify-content:space-between}
+  html.book-active .spread--contact .deco--dreamcloud{display:none}
+  html.book-active .line__wrap{max-width:calc(4 * min(230px,21vh) + 60px)}
 }
-html.book-active .totop{margin-top:4px;padding:7px 16px}
+/* at 480px and under the leaf scrolls (see the floor rule), so the footer
+   just follows the photos, as on phones */
+@media (max-height:480px){
+  html.book-active .spread--contact .leaf__scroll{display:block}
+  html.book-active .spread--contact .crochet{margin:28px 0 0}
+  html.book-active .footer{padding:20px 0 8px}
+}
 html.book-active .paper,
 html.book-active .card,
 html.book-active .indexcard{padding:clamp(5px,1vh,10px) clamp(9px,1.1vw,14px)}
@@ -1768,7 +1725,6 @@ html.book-active .paper--social{margin-top:clamp(0px,calc(50vh - 330px),130px)}
 }
 html.book-active .linkrow{margin-bottom:8px}
 html.book-active .ee{margin:6px auto 0;max-width:340px}
-html.book-active .resume__pdf{height:440px}
 /* the photo+index-card column runs almost 2x taller than the text column and
    is the dominant height cost on the cover page — shrink both. */
 html.book-active .hero__right{gap:12px}
@@ -1872,11 +1828,7 @@ html.book-active .leaf:not(.is-current) .deco-mic__waves path,
 html.book-active .leaf:not(.is-current) .deco-eq__bar,
 html.book-active .leaf:not(.is-current) .deco--dreamcloud use,
 html.book-active .leaf:not(.is-current) .deco-dc__z,
-html.book-active .leaf:not(.is-current) .deco--sleepycloud use,
-html.book-active .leaf:not(.is-current) .deco-sc__z,
 html.book-active .leaf:not(.is-current) .deco-ss__star,
-html.book-active .leaf:not(.is-current) .deco-fs__star,
-html.book-active .leaf:not(.is-current) .deco-fz__z,
 html.book-active .leaf:not(.is-current) .deco-dots__dot{
   animation-play-state:paused;
 }
@@ -1910,20 +1862,9 @@ html.book-active .leaf:not(.is-current) .deco-dots__dot{
      is gone, and the push just adds dead space above the social card */
   html.book-active .paper--social{margin-top:0}
 
-  /* crochet leaf: the 1fr/auto/1fr grid centres the polaroid row in the
-     remaining viewport height, which only makes sense when the page can't
-     scroll. Flowing top-to-bottom lets it scroll like every other page
-     instead of vertically centering content that no longer fits. */
-  html.book-active .line .leaf__scroll{grid-template-rows:none;display:block}
-  html.book-active .line .line__h,
-  html.book-active .line .footer{align-self:auto}
-  html.book-active .line .footer__sign{
-    position:static;margin:0;text-align:center;
-  }
-
   /* room at the bottom of every page for the fixed prev/next bar below,
      plus the home-indicator inset on notched phones.
-     This has to live on .leaf__scroll itself, not on .hero/.spread/.line —
+     This has to live on .leaf__scroll itself, not on .hero/.spread —
      those ARE the .leaf elements, and .leaf__scroll is absolutely
      positioned with inset:0 against them, which resolves against their
      padding box (covers the padding area) rather than being inset by it.
@@ -1931,13 +1872,18 @@ html.book-active .leaf:not(.is-current) .deco-dots__dot{
      scrolling box, so its own padding is what scrollHeight — and so
      reachability — is measured against.
      Side padding rides along here for the same reason: the leaf's own
-     20px horizontal padding (from .hero/.spread/.line, shared with
+     20px horizontal padding (from .hero/.spread, shared with
      desktop/tablet) is equally swallowed, leaving cards ~9px from the
      screen edge on phone. Scoped to this phone tier only so desktop/tablet
      stay exactly as they were. */
   html.book-active .leaf__scroll{
     padding:0 16px calc(76px + env(safe-area-inset-bottom));
   }
+  /* the page scrolls here, so no need to hold the footer clear of the
+     pill — .leaf__scroll's bottom padding above already does that */
+  html.book-active .spread--contact .leaf__scroll{display:block}
+  html.book-active .spread--contact .crochet{margin:28px 0 0}
+  html.book-active .footer{padding:28px 0 8px}
 
   /* a soft fade at the bottom edge of each page hints there's more to
      scroll to — subtle, so it doesn't read as a hard cutoff even on a
@@ -2065,7 +2011,11 @@ html.book-active .leaf:not(.is-current) .deco-dots__dot{
 
   .grid--projects{grid-template-columns:repeat(2,1fr)}
 
-  .grid--contact{grid-template-columns:1fr 1.15fr;align-items:start}
+  .grid--contact,
+  html.book-active .grid--contact{max-width:900px;margin-left:auto;margin-right:auto}
+  .paper--say{--tilt:-.4deg}
+  .paper--say{display:grid;grid-template-columns:1.1fr 1fr;gap:10px 36px;align-items:center}
+  .paper--say .contactlist li:first-child{border-top:1px dotted var(--dot)}
 }
 
 @media (min-width:820px){
@@ -2112,9 +2062,6 @@ html.book-active .leaf:not(.is-current) .deco-dots__dot{
     gap:22px;align-items:center;
   }
   .paper--beam .beam{margin:0}
-
-  .resume__pdf{display:block}
-  .resume__fallback{display:none}
 }
 
 @media (min-width:1060px){
@@ -2199,14 +2146,8 @@ html.book-active .leaf:not(.is-current) .deco-dots__dot{
   html.book-active .bujo li{padding:2px 0 2px 26px}
   html.book-active .entry__sub{margin:.1em 0 .2em}
   html.book-active .entry + .entry{margin-top:3px;padding-top:3px}
-  /* .footer's top padding was a flat 40px with no height term at all —
-     the crochet leaf (leaf7) is otherwise unscrollable in landscape now,
-     same as everywhere else. .line's own bottom padding was width-only
-     (3vw), so a wide-but-short landscape window got full-width padding
-     regardless of how little height was actually available. */
-  html.book-active .footer{padding:clamp(12px,4vh,40px) 20px clamp(16px,min(6.5vw,4vh),72px)}
-  html.book-active .line{padding:clamp(8px,4vh,44px) 20px clamp(12px,min(3vw,3vh),32px)}
-  html.book-active .line__h{margin-bottom:clamp(8px,4vh,38px)}
+  html.book-active .crochet{margin-top:clamp(8px,2.4vh,40px)}
+  html.book-active .line__h{margin-bottom:clamp(6px,2vh,28px)}
 
   /* research's "where i am right now" card (.paper--lab) is the single
      tallest thing on any page — a bio paragraph plus a sub-project block
@@ -2218,14 +2159,9 @@ html.book-active .leaf:not(.is-current) .deco-dots__dot{
   html.book-active .proj__sub{margin:.1em 0 .25em}
   html.book-active .margin-note--wide{padding:4px 10px 4px 30px;margin-top:.3em}
 
-  /* the résumé iframe was a flat 440px regardless of viewport height — on
-     a short landscape window that's most of the leaf's entire height on
-     its own, before anything else on the contact page. The polaroid photo
-     (aspect-ratio 4/5, sized purely by width — min(210px,50vw)) has the
-     same problem in reverse: shrinking width alone does nothing on a wide
-     landscape window, so it stayed full-size while everything around it
-     compressed. */
-  html.book-active .resume__pdf{height:clamp(160px,45vh,440px)}
+  /* The polaroid photo (aspect-ratio 4/5, sized purely by width —
+     min(210px,50vw)) doesn't shrink on a wide landscape window by width
+     alone, so it stayed full-size while everything around it compressed. */
   html.book-active .polaroid__frame{width:min(210px,50vw,34vh)}
   html.book-active .indexcard{padding:8px 14px 6px}
   html.book-active .indexcard__list a{padding:2px 2px}
@@ -2509,25 +2445,7 @@ html.book-active .leaf:not(.is-current) .deco-dots__dot{
   100%{opacity:0;transform:translate(0,0)}
 }
 
-/* ---------- crochet leaf : big sleepy cloud, footer stars, shooting star, drifting z's, dots ---------- */
-/* the main sleep-theme visual, in the large empty band above the photos */
-.deco--sleepycloud{position:absolute;left:4%;top:4%;width:240px;color:var(--blue-pale)}
-.deco--sleepycloud use{fill:currentColor;animation:decoDcBob 9s ease-in-out infinite}
-.deco-sc__z{font-family:var(--f-hand);font-weight:700;fill:var(--ink-3);opacity:0}
-.deco-sc__z--1{font-size:22px;animation:decoZRise 6.5s ease-in-out infinite}
-.deco-sc__z--2{font-size:28px;animation:decoZRise 6.5s ease-in-out infinite 2.2s}
-.deco-sc__z--3{font-size:34px;animation:decoZRise 6.5s ease-in-out infinite 4.4s}
-
-.deco--footerStars{position:absolute;left:5%;bottom:170px;width:56px;height:18px}
-.deco--footerShoot{position:absolute;left:8%;bottom:100px;width:60px;height:60px}
-.deco-fs__star{color:var(--blue-soft);opacity:0;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;fill:currentColor;animation:decoShoot 13s linear infinite 1s}
-
-.deco--footerZ{position:absolute;right:6%;bottom:64px;width:56px;height:84px}
-.deco-fz__z{font-family:var(--f-hand);font-weight:700;fill:var(--ink-3);opacity:0}
-.deco-fz__z--1{font-size:19px;animation:decoZRise 7s ease-in-out infinite}
-.deco-fz__z--2{font-size:24px;animation:decoZRise 7s ease-in-out infinite 2.3s}
-.deco-fz__z--3{font-size:29px;animation:decoZRise 7s ease-in-out infinite 4.6s}
-
+/* ---------- contact : twinkle dots behind the crochet line ---------- */
 .deco--dots{position:absolute;inset:0;width:100%;height:100%}
 .deco-dots__dot{fill:#fff;opacity:.5;animation:twinkle var(--dur,5s) ease-in-out infinite;animation-delay:var(--del,0s)}
 
@@ -2580,15 +2498,14 @@ html.book-active .leaf:not(.is-current) .deco-dots__dot{
   .hml__pt,.hml__notch{opacity:1}
   .hml__curve{stroke-dashoffset:0}
   .deco-hc-plane,.deco-hc-plane__trail,.deco-clef__note,
-  .deco-nb__pen,.deco-dc__z,.deco-fz__z,.deco-ss__star,.deco-fs__star{display:none}
+  .deco-nb__pen,.deco-dc__z,.deco-ss__star{display:none}
   .deco-conste__line{opacity:.5;stroke-dashoffset:0}
   .deco-bin__wave path{opacity:.4;transform:scale(1)}
   .deco-yarn__thread path{stroke-dashoffset:0}
   .deco-nb__melody{opacity:.9;stroke-dashoffset:0}
   .deco-clef__glyph path{stroke-dashoffset:0}
   .deco-code__caret,.deco-placeholder__cursor{animation:none;opacity:1}
-  .deco--dreamcloud use,.deco--sleepycloud use{transform:none}
-  .deco-sc__z{display:none}
+  .deco--dreamcloud use{transform:none}
   .leaf{transform:none !important}
   .leaf:not(.is-current){opacity:0;visibility:hidden}
   .book__stage{perspective:none}

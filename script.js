@@ -152,18 +152,17 @@
 
     root.classList.add('book-active');
 
-    var HASH_TO_LEAF = { top: 0, about: 1, research: 2, projects: 3, music: 4, music2: 5, contact: 6, crochetH: 7 };
-    var LEAF_HASH     = ['#top', '#about', '#research', '#projects', '#music', '#music2', '#contact', '#crochetH'];
-    var TIME_FOR_LEAF = ['day', 'day', 'midday', 'midday', 'dusk', 'dusk', 'night', 'night'];
-    var THEME_COLOR   = ['#dceaf7', '#dceaf7', '#bfe3f7', '#bfe3f7', '#f4b483', '#f4b483', '#0b1730', '#0b1730'];
-    var CONTACT_LEAF  = 6;
+    // crochetH still resolves (to contact, where the crochet line now lives)
+    // so old links to the former standalone crochet page keep working.
+    var HASH_TO_LEAF = { top: 0, about: 1, research: 2, projects: 3, music: 4, music2: 5, contact: 6, crochetH: 6 };
+    var LEAF_HASH     = ['#top', '#about', '#research', '#projects', '#music', '#music2', '#contact'];
+    var TIME_FOR_LEAF = ['day', 'day', 'midday', 'midday', 'dusk', 'dusk', 'night'];
+    var THEME_COLOR   = ['#dceaf7', '#dceaf7', '#bfe3f7', '#bfe3f7', '#f4b483', '#f4b483', '#0b1730'];
     // which nav tab owns each leaf. Music is one SECTION spanning two
     // leaves (4 "#music", 5 "#music2") but has only one tab, so comparing
     // HASH_TO_LEAF[id] === cur directly left every tab dark on leaf 5. The
-    // cover (0) and crochet closer (7) have no tab of their own either —
-    // crochet inherits "contact" (the section it's the back cover of) so
-    // the bar doesn't go blank there too; the cover stays null, unchanged.
-    var TAB_FOR_LEAF  = [null, 'about', 'research', 'projects', 'music', 'music', 'contact', 'contact'];
+    // cover (0) has no tab of its own and stays null.
+    var TAB_FOR_LEAF  = [null, 'about', 'research', 'projects', 'music', 'music', 'contact'];
 
     function initialLeaf() {
       var h = (location.hash || '').replace('#', '');
@@ -182,10 +181,6 @@
     var ribbonFill = $('#ribbonFill');
     var tabs = $$('.tab');
     var pagePrev = $('#pagePrev'), pageNext = $('#pageNext'), pageNo = $('#pageNo');
-    var resumeIframe = $('.resume__pdf');
-    // hidden by default; prepare() reveals it once, permanently, the first
-    // time the book reaches contact (see the "load early, keep loaded" latch)
-    if (resumeIframe) resumeIframe.style.visibility = 'hidden';
 
     var FLIP_MS = 650;     // one page turn — the ONLY flip duration; near or far, it's one turn
 
@@ -249,25 +244,9 @@
     // is still face-down (or, for the outgoing leaf, about to turn away) at
     // that moment. Splitting these out of layout() keeps them off the frame
     // where the flip actually lands: the destination's decorative SVG loops
-    // un-pause, and the résumé PDF viewer warms up, *during* the flip.
+    // un-pause *during* the flip.
     function prepare(cur) {
       leaves.forEach(function (leaf, i) { leaf.classList.toggle('is-current', i === cur); });
-    }
-
-    // The résumé PDF is the most expensive thing on the site to bring to
-    // life: un-hiding it instantiates the browser's PDF viewer, which blocks
-    // the main thread hard. It must share a frame with neither the click (it
-    // would stall the flip before it starts — the old behaviour, and why
-    // cover→contact froze worst) nor the landing (it would stall the pop-up),
-    // so it gets its own idle slot once everything else has settled.
-    // One-way latch: instantiated at most once per session.
-    var resumeWarmed = false;
-    function warmResume() {
-      if (resumeWarmed || !resumeIframe || current !== CONTACT_LEAF) return;
-      resumeWarmed = true;
-      var reveal = function () { resumeIframe.style.visibility = ''; };
-      if (window.requestIdleCallback) window.requestIdleCallback(reveal, { timeout: 600 });
-      else setTimeout(reveal, 200);
     }
 
     // Focus is deferred to the landing rather than fired at commit time:
@@ -320,7 +299,6 @@
       // of a frame or two later.
       activateLeaf(current);
       focusIfPending();
-      warmResume();
     }
 
     // At most one leaf is ever "elevated" (z-index total+5, actively
@@ -513,7 +491,7 @@
     // immediately at commit time. Text-only writes, nothing that forces
     // layout, so this is safe on the click frame. Everything expensive lives
     // elsewhere: the pop-up trigger (activateLeaf), the palette handover
-    // (applyTime/prepare), focus, and the résumé warm-up all fire later, so a
+    // (applyTime/prepare) and focus all fire later, so a
     // multi-page riffle doesn't pop or repaint the destination mid-flight.
     function updateChrome(cur) {
       updateRibbon(cur);
@@ -635,7 +613,7 @@
         lastLeaf.removeEventListener('transitionend', onEnd);
         clearTimeout(safety);
         // snap() reconciles, converges the handover, arms the destination's
-        // pop-up synchronously, moves focus, and queues the résumé warm-up —
+        // pop-up synchronously and moves focus —
         // so the pop fires once the turn has actually landed rather than at
         // commit time, and a riffle never pops its cards mid-flight
         snap();
@@ -875,7 +853,6 @@
     updateChrome(current);
     primeLeaf(current);
     activateLeaf(current);
-    warmResume();
 
     bindCorners();
     bindSwipe();
